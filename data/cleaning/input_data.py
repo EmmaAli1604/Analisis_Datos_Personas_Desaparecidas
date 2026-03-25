@@ -25,35 +25,46 @@ def limpiar_fecha(x):
         return pd.NaT
 
 def main():
-    df_processed = pd.read_csv(DATA_PROCESSED)
+    df_original = pd.read_csv(DATA_PROCESSED)
     
-    # Normalizar las fechas
-    
+    # Normalizar las fechas una sola vez
     cols_fecha = ['FECHA_NACIMIENTO', 'FECHA_DESAPARICION', 'FECHA_REGISTRO']
-
     for col in cols_fecha:
-        df_processed[col] = df_processed[col].apply(lambda x: limpiar_fecha(x))
+        df_original[col] = pd.to_datetime(df_original[col], errors='coerce')
     
-    # Input data con diferentes técnicas de imputación
-    df_mean = input_data_mean(df_processed, ['FECHA_NACIMIENTO', 'FECHA_DESAPARICION', 'FECHA_REGISTRO'])
+    # Input dataset con estadisticas simples para cada columna
+    # --- ESCENARIO MEDIA ---
+    df_mean = input_data_mean(df_original.copy(), cols_fecha)
     df_mean.to_csv('data/input_data/data_mean.csv', index=False)
-    df_median = input_data_median(df_processed, ['FECHA_NACIMIENTO', 'FECHA_DESAPARICION', 'FECHA_REGISTRO'])
-    df_median.to_csv('data/input_data/data_median.csv', index=False)
-    df_mode = input_data_mode(df_processed, ['FECHA_NACIMIENTO', 'FECHA_DESAPARICION', 'FECHA_REGISTRO'])
     
-    # Guardar los DataFrames con los datos imputados con estadistica simple
+    # --- ESCENARIO MEDIAN ---
+    df_median = input_data_median(df_original.copy(), cols_fecha)
+    df_median.to_csv('data/input_data/data_median.csv', index=False)
+    
+    # --- ESCENARIO MODE ---
+    df_mode = input_data_mode(df_original.copy(), cols_fecha)
     df_mode.to_csv('data/input_data/data_mode.csv', index=False)
-    df_mean.to_csv('data/input_data/data_mean.csv', index=False)
-    df_median.to_csv('data/input_data/data_median.csv', index=False)
     
-    # Datos imputados para analisis
-    df_processed = input_data_mean(df_processed, ['FECHA_NACIMIENTO'])
-    # Imputar usando la mediana de la ENTIDAD federativa
-    df_processed['FECHA_DESAPARICION'] = df_processed.groupby('ENTIDAD')['FECHA_DESAPARICION'].transform(
+    # Analisis Final
+    df_final = df_original.copy()
+    
+    # Imputación por media en Nacimiento
+    df_final['FECHA_NACIMIENTO'] = df_final['FECHA_NACIMIENTO'].fillna(df_final['FECHA_NACIMIENTO'].mean())
+    
+    # Imputación por mediana de ENTIDAD
+    df_final['FECHA_DESAPARICION'] = df_final.groupby('ENTIDAD')['FECHA_DESAPARICION'].transform(
         lambda x: x.fillna(x.median())
     )
-    df_processed['FECHA_REGISTRO'] = df_processed['FECHA_REGISTRO'].fillna(df_processed['FECHA_DESAPARICION'])
-    df_processed.to_csv('data/input_data/data_imputed.csv', index=False)
+    
+    # Si sigue habiendo nulos (porque toda la entidad es nula), usamos la mediana global
+    df_final['FECHA_DESAPARICION'] = df_final['FECHA_DESAPARICION'].fillna(df_final['FECHA_DESAPARICION'].median())
+    
+    # Relacional: Registro = Desaparición
+    df_final['FECHA_REGISTRO'] = df_final['FECHA_REGISTRO'].fillna(df_final['FECHA_DESAPARICION'])
+    
+    print(df_final.info())
+    
+    df_final.to_csv('data/input_data/data_imputed.csv', index=False)
 
 if __name__ == "__main__":
     main()
