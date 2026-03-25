@@ -30,8 +30,6 @@ def limpiar_fecha(x):
     except:
         return pd.NaT
 
-cols_fecha = ['FECHA_NACIMIENTO', 'FECHA_DESAPARICION', 'FECHA_REGISTRO']
-    
 def main():
     df_raw = load_data()
     print_data_info(df_raw)
