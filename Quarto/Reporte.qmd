@@ -1,0 +1,135 @@
+---
+title: "Tarea 2: Personas desaparecidas en México."
+author: "Emma Alicia Jimenez Sanchez - 320046155
+        Nancy Elena del Valle - 117001778
+        Leonardo Rafael Ortiz Cervantes - 320059362"
+format: html
+jupyter: python3
+---
+
+# Descripción del Dataset
+
+## Carga de datos
+El data set utilizado en este reporte corresponde al archivo data_secretariado.csv, este contiene información sobre las personas que han sido reportadas como desaparecidas en el país. 
+
+Sus caracteristicas se describen a continuación:
+
+```{python}
+import pandas as pd
+
+DATA_RAW = "../data/raw/data_secretariado.csv"
+
+df = pd.read_csv(DATA_RAW)
+print("Filas:", df.shape[0])
+print("Columnas:", df.shape[1])
+```
+
+Con las siguientes columnnas:
+```{python}
+print(df.columns)
+```
+
+Para analizar el periodo de fechas completo es necesario aislar los valores únicos para centrarnos solo en aquellos que tengan sentido. Más adelante veremos si es necesario eliminar o modificar estos valores para un análisis más preciso.
+```{python}
+dfDesaparicion = pd.to_datetime(df["FECHA_DESAPARICION"], dayfirst=True, errors='coerce')
+dfRegistro = pd.to_datetime(df["FECHA_REGISTRO"], dayfirst=True, errors='coerce')
+
+print("Las desapariciones van desde "+str(dfDesaparicion.min())+" hasta "+str(dfDesaparicion.max()))
+
+print("Los registros van desde "+str(dfRegistro.min())+" hasta "+str(dfRegistro.max()))
+```
+
+Analizando los primeros registros del dataset, podemos observar que cada uno corresponde a un registro de los reportes de desaparición realizados en cada entidad.
+
+```{python}
+df.head()
+```
+
+# Medidad Descriptivas y Análisis Exploratorio de Datos (EDA)
+
+## Diccionario de Datos
+
+| Nombre | Descripción | Tipo Dato | Tipo Estadístico | 
+| :--- | :--- | :--- | :--- | 
+| **ID_VICTIMA** | Id único del registro | string | Nominal | 
+| **ORIGEN_REPORTE** | Fiscalía o comision donde se origina el reporte | string | Nominal |
+| **FECHA_NACIMIENTO** | Fecha de nacimiento de la persona reportada como desaparecida | string | Ordinal |
+| **SEXO** | Sexo de la víctima (HOMBRE, CONFIDENCIAL, MUJER, INDERTERMINADO) | string | Nomial |
+| **FECHA_DESAPARICION** | Fecha de desaparición de la víctima | string | Ordinal |
+| **FECHA_REGISTRO** | Fecha de registro de la desaparición en la físcalía | string | Ordinal |
+| **ESTATUS_VICTIMA** | Estatus de la persona desaparecida (DESPARECIDA, CONFIDENCIAL, NO LOCALIZADA) | string | Nominal |
+| **CVE_ENT** | Clave entidad | int64 | Continua |
+| **ENTIDAD** | Fecha del evento de desaparición | string | Nominal |
+| **CVE_MUN** | Clave municipio | int64 | Continua |
+| **MUNICIPIO** | Fecha del evento de desaparición | string | Nominal |
+
+## Aplicación de CRISP-DM al dataset asignado
+### Comprensión del Negocio
+El objetivo de este análisis es identificar patrones y características relevantes en los registros de personas desaparecidas en México. Algunas preguntas clave incluyen:
+- ¿En qué periodos se concentran más desapariciones?
+- ¿Qué regiones presentan mayor incidencia?
+- ¿Existen patrones en edad o sexo?
+
+En las secciones anteriores se ha desglosado un poco de la exploración inicial del data set, identificando los tipos de datos y las principales inconsistencias de tipos en columnas como las de fecha.
+
+Así, al realizar una conteo de valores faltantes notamos que la mayoria se encuentra en las columnas correspondientes a las fechas. 
+```{python}
+df.isnull().sum()
+```
+Los porcentajes correspondientes a cada uno de estos se encuentran a continuación:
+```{python}
+(df.isnull().sum() / len(df)) * 100
+```
+
+Lo siguiente es identificar los valores almacenados de manera erronea:
+```{python}
+df.dtypes
+```
+La mayoria de las columnas aparece con el tipo **object** lo cual nos indica que puede ser una cadena, diccionario, listas o una mezcla de todo esto. Nos afectará principalmente al tratar de realizar operaciones con las fechas pues, como se vio antes, es necesario convertirlas a datetime para poder calcular la edad aproximada del sujeto.
+
+Revisaremos aquellas columnas que deban tener valores constantes, como sexo, entidad y municipio para detectar valores extraños.
+
+**SEXO**
+```{python}
+df['SEXO'].unique()
+```
+
+**ESTATUS_VICTIMA**
+```{python}
+df['ESTATUS_VICTIMA'].unique()
+```
+
+**ENTIDAD**
+```{python}
+df['ENTIDAD'].unique()
+```
+
+**MUNICIPIO**
+```{python}
+df['MUNICIPIO'].unique()
+```
+
+```{python}
+df.describe()
+```
+
+
+### Data Preparation
+Para preparar los datos para el análisis, se aplicarán las siguientes técnicas:
+**Conversión de fechas**
+**Eliminación de duplicados**
+**Limpieza de texto**
+**Manejo de valores faltantes**
+
+### Modelling
+En este caso, el objetivo es realizar un análisis descriptivo y exploratorio, por lo que no se aplicarán modelos predictivos. Sin embargo, dependiendo de los hallazgos, se podrían aplicar técnicas de clustering para identificar grupos de casos similares o modelos de clasificación para predecir el estado de las víctimas.
+
+# Evaluation
+
+Se evaluará la calidad de los datos y posibles sesgos, como subregistro o inconsistencias en los reportes.
+
+# Deployment
+
+El análisis es presentado mediante este reporte en Quarto, incluyendo visualizaciones y conclusiones.
+
+
