@@ -1,5 +1,6 @@
 from ..config.config import DATA_RAW
 import pandas as pd
+from .normalizar import normaliza_data
 
 def load_data():
     df = pd.read_csv(DATA_RAW)
@@ -20,23 +21,14 @@ def print_data_info(df):
     print("Missing Values:")
     print(df.isnull().sum())
     print("="*80)
-    
+
 def main():
     df_raw = load_data()
-    df_clean = df_raw.copy()
-    # Normalizar las fechas
-    df_clean['FECHA_NACIMIENTO'] = pd.to_datetime(df_clean['FECHA_NACIMIENTO'], errors='coerce')
-    df_clean['FECHA_DESAPARICION'] = pd.to_datetime(df_clean['FECHA_DESAPARICION'], errors='coerce')
-    df_clean['FECHA_REGISTRO'] = pd.to_datetime(df_clean['FECHA_REGISTRO'], errors='coerce')
+    print_data_info(df_raw)
     
-    # Columna con un mapeo de hombre, mujer, indeterminado a 1, 2, 3 respectivamente
-    df_clean['SEXO_MAP'] = df_clean['SEXO'].map({'HOMBRE': 1, 'MUJER': 2, 'INDETERMINADO': 3})
+    df_processed = normaliza_data(df_raw)
     
-    # Columna con un mapeo de estatus victima desparecida, no localizada, confidencial a 1, 2, 3 respectivamente
-    df_clean['ESTATUS_MAP'] = df_clean['ESTATUS_VICTIMA'].map({'DESAPARECIDA': 1, 'NO LOCALIZADA': 2, 'CONFIDENCIAL': 3})
+    df_processed.to_csv("data/processed/data_processed.csv", index=False)
     
-    # Se elimina los registros sin fecha de registro
-    df_clean = df_clean.dropna(subset=['FECHA_REGISTRO'])
-
 if __name__ == "__main__":
     main()
