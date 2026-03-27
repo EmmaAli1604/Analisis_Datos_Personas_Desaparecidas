@@ -1,0 +1,839 @@
+{
+  "cells": [
+    {
+      "cell_type": "raw",
+      "metadata": {},
+      "source": [
+        "---\n",
+        "title: 'Tarea 2: Personas desaparecidas en México.'\n",
+        "author:\n",
+        "  - Emma Alicia Jimenez Sanchez - 320046155\n",
+        "  - Nancy Elena del Valle Vera - 117001778\n",
+        "  - Leonardo Rafael Ortiz Cervantes - 320059362\n",
+        "format: pdf\n",
+        "---"
+      ],
+      "id": "bfdfcd57"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# Empresa y metodología de Minería de Datos\n",
+        "## Emma Alicia Jimenez Sanchez\n",
+        "IBM es una de las empresas más importantes en el ámbito de la analítica de datos y la inteligencia artificial. Para el desarrollo de proyectos de minería de datos, utiliza principalmente la metodología CRISP-DM  la cual está integrada en herramientas como SPSS Modeler. \n",
+        "https://www.ibm.com/docs/es/spss-modeler/18.6.0?topic=overview-crisp-dm-in-spss-modeler\n",
+        "## Nancy Elena del Valle Vera\n",
+        "Google utiliza un enfoque integral y modernizado para la minería y ciencia de datos, centrado en la nube, el aprendizaje automático (ML) y la agilidad, frecuentemente estructurado bajo los principios de MLOps y analítica de datos unificada en Google Cloud\n",
+        "https://cloud.google.com/discover/what-is-mlops?hl=es\n",
+        "\n",
+        "## Leonardo Rafael Ortiz Cervantes\n",
+        "Oracle desarrolla sus innovaciones en minería de datos apoyándose en la metodología CRISP-DM. Esta estructura permite que Oracle Data Mining integre algoritmos avanzados directamente en su base de datos, facilitando la creación de modelos predictivos y la detección de patrones en sus productos. https://academia-lab.com/enciclopedia/mineria-de-datos-de-oracle/?utm_source=copilot.com#google_vignette\n",
+        "\n",
+        "# Descripción del Dataset\n",
+        "\n",
+        "## Carga de datos\n",
+        "El data set utilizado en este reporte corresponde al archivo data_secretariado.csv, este contiene información sobre las personas que han sido reportadas como desaparecidas en el país. \n",
+        "\n",
+        "Sus caracteristicas se describen a continuación:"
+      ],
+      "id": "45db647b"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "import pandas as pd\n",
+        "import seaborn as sns\n",
+        "import matplotlib.pyplot as plt"
+      ],
+      "id": "d8a27a4c",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "DATA_RAW = \"../data/raw/data_secretariado.csv\"\n",
+        "\n",
+        "df = pd.read_csv(DATA_RAW)\n",
+        "print(\"Filas:\", df.shape[0])\n",
+        "print(\"Columnas:\", df.shape[1])"
+      ],
+      "id": "152ef474",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Con las siguientes columnnas:"
+      ],
+      "id": "894bc38c"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "print(df.columns)"
+      ],
+      "id": "04d24478",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Para analizar el periodo de fechas completo es necesario aislar los valores únicos para centrarnos solo en aquellos que tengan sentido. Más adelante veremos si es necesario eliminar o modificar estos valores para un análisis más preciso."
+      ],
+      "id": "0b07c0eb"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "dfDesaparicion = pd.to_datetime(df[\"FECHA_DESAPARICION\"], dayfirst=True, errors='coerce')\n",
+        "dfRegistro = pd.to_datetime(df[\"FECHA_REGISTRO\"], dayfirst=True, errors='coerce')\n",
+        "\n",
+        "print(\"Las desapariciones van desde \"+str(dfDesaparicion.min())+\" hasta \"+str(dfDesaparicion.max()))\n",
+        "\n",
+        "print(\"Los registros van desde \"+str(dfRegistro.min())+\" hasta \"+str(dfRegistro.max()))"
+      ],
+      "id": "976f57ff",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Analizando los primeros registros del dataset, podemos observar que cada uno corresponde a un registro de los reportes de desaparición realizados en cada entidad."
+      ],
+      "id": "738f9f41"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "df.head()"
+      ],
+      "id": "35cb5b01",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# Medidad Descriptivas y Análisis Exploratorio de Datos (EDA)\n",
+        "\n",
+        "## Diccionario de Datos\n",
+        "\n",
+        "| Nombre | Descripción | Tipo Dato | Tipo Estadístico | \n",
+        "| :--- | :--- | :--- | :--- | \n",
+        "| **ID_VICTIMA** | Id único del registro | string | Nominal | \n",
+        "| **ORIGEN_REPORTE** | Fiscalía o comision donde se origina el reporte | string | Nominal |\n",
+        "| **FECHA_NACIMIENTO** | Fecha de nacimiento de la persona reportada como desaparecida | string | Ordinal |\n",
+        "| **SEXO** | Sexo de la víctima (HOMBRE, CONFIDENCIAL, MUJER, INDERTERMINADO) | string | Nomial |\n",
+        "| **FECHA_DESAPARICION** | Fecha de desaparición de la víctima | string | Ordinal |\n",
+        "| **FECHA_REGISTRO** | Fecha de registro de la desaparición en la físcalía | string | Ordinal |\n",
+        "| **ESTATUS_VICTIMA** | Estatus de la persona desaparecida (DESPARECIDA, CONFIDENCIAL, NO LOCALIZADA) | string | Nominal |\n",
+        "| **CVE_ENT** | Clave entidad | int64 | Continua |\n",
+        "| **ENTIDAD** | Fecha del evento de desaparición | string | Nominal |\n",
+        "| **CVE_MUN** | Clave municipio | int64 | Continua |\n",
+        "| **MUNICIPIO** | Fecha del evento de desaparición | string | Nominal |\n",
+        "\n",
+        "## Aplicación de CRISP-DM al dataset asignado\n",
+        "### Comprensión del Negocio\n",
+        "El objetivo de este análisis es identificar patrones y características relevantes en los registros de personas desaparecidas en México. Algunas preguntas clave incluyen:\n",
+        "\n",
+        "- ¿En qué periodos se concentran más desapariciones?\n",
+        "\n",
+        "- ¿Qué regiones presentan mayor incidencia?\n",
+        "\n",
+        "- ¿Existen patrones en edad o sexo?\n",
+        "\n",
+        "- ¿Cuál es la tasa de información confidencial por estado?\n",
+        "\n",
+        "- ¿Cuál es el promedio de desapariciones por estado y de acuerdo al estatus?\n",
+        "\n",
+        "En las secciones anteriores se ha desglosado un poco de la exploración inicial del data set, identificando los tipos de datos y las principales inconsistencias de tipos en columnas como las de fecha.\n",
+        "\n",
+        "Así, al realizar una conteo de valores faltantes notamos que la mayoria se encuentra en las columnas correspondientes a las fechas. "
+      ],
+      "id": "ba34095b"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "df.isnull().sum()"
+      ],
+      "id": "9158822b",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Los porcentajes correspondientes a cada uno de estos se encuentran a continuación:"
+      ],
+      "id": "c146ddf0"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "(df.isnull().sum() / len(df)) * 100"
+      ],
+      "id": "a00b8765",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Lo siguiente es identificar los valores almacenados de manera erronea:"
+      ],
+      "id": "aaeb0069"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "df.dtypes"
+      ],
+      "id": "f06213c5",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "La mayoria de las columnas aparece con el tipo **object** lo cual nos indica que puede ser una cadena, diccionario, listas o una mezcla de todo esto. Nos afectará principalmente al tratar de realizar operaciones con las fechas pues, como se vio antes, es necesario convertirlas a datetime para poder calcular la edad aproximada del sujeto.\n",
+        "\n",
+        "Revisaremos aquellas columnas que deban tener valores constantes, como sexo, entidad y municipio para detectar valores extraños.\n",
+        "\n",
+        "**SEXO**"
+      ],
+      "id": "c583e904"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "df['SEXO'].unique()"
+      ],
+      "id": "01825d31",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Se detectaron dos tipo de valores extraños: *Confidencial* e *Indeterminado*. Dentro de este dataset hay muchos valores marcados como confidenciales, sin embargo, el uso de *Indeterminado* puede referirse a un valor perdido como para personas desaparecidas que no caen en la binaridad de género.\n",
+        "\n",
+        "**ESTATUS_VICTIMA**"
+      ],
+      "id": "53e1b4af"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "df['ESTATUS_VICTIMA'].unique()"
+      ],
+      "id": "57e03c82",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Como se menciono antes se usa *Confidencial* para tratar valores reservados, pero notemos que si una persona esta *Desaparecida* implica que no se le ha localizado, por lo que es redundante tener dos valores categóricas diferentes que significan lo mismo.\n",
+        "\n",
+        "**ENTIDAD**"
+      ],
+      "id": "0c229ad5"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "df['ENTIDAD'].unique()"
+      ],
+      "id": "76d4024b",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "En esta columna se coloca un *Se Desconoce* para los valores faltantes.\n",
+        "\n",
+        "**MUNICIPIO**"
+      ],
+      "id": "d0e85c4c"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "df['MUNICIPIO'].unique()"
+      ],
+      "id": "ad8eb875",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Vuelve a usarse la palabra *Confidencial* para aquellos datos reservados.\n",
+        "\n",
+        "Lo siguiente lograr identificar la existencia de valores duplicados. Además del sexo, fecha de nacimiento y lugar de desaparición no tenemos ningún otro dato extra sobre las victimas, solo una columna *id*, la cual no se sabe si esta relacionada con otra base de datos que nos de datos más sensibles como el nombre de la persona o solo fue la forma de identificar cada uno de los registros dentro de este data set. "
+      ],
+      "id": "c43f3625"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "df['ID_VICTIMA'].unique()"
+      ],
+      "id": "db52ddca",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Notemos que tenemos exactamente el mismo número de valores únicos en la columna *ID_VICTIMA* como columnas dentro de la tabla completa. Por la falta de datos que nos indiquen con presición la existencia de duplicados, supondremos que no los hay, de lo contrario podriamos eliminar casos que parecen ser el mismo pero que en realidad no lo son.\n",
+        "\n",
+        "Por el análisis pequeño hecho en la primera parte de este reporte, ya sabemos que todas las columnas correspondientes a fechas presentan valores erroneos que no permiten la conversión al tipo *datetime* de manera automática. Revisamo cada una de las diferentes columnas para tener una clara comprensión de los errores:\n",
+        "\n",
+        "**Fecha de Nacimiento**"
+      ],
+      "id": "7fd7d936"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "df['FECHA_NACIMIENTO'].value_counts().sort_index().head(20)"
+      ],
+      "id": "2157063d",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "df['FECHA_NACIMIENTO'].value_counts().sort_index().tail(20)"
+      ],
+      "id": "9430c175",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Notemos que en esta columna existen valores con años imposibles, pues nos habla de gente que nacio hace más de un siglo o de personas que ni siquiera han nacido.\n",
+        "\n",
+        "**Fecha de Desaparición**"
+      ],
+      "id": "b76c8779"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "df['FECHA_DESAPARICION'].value_counts().sort_index().head(20)"
+      ],
+      "id": "b239be9a",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "df['FECHA_DESAPARICION'].value_counts().sort_index().tail(20)"
+      ],
+      "id": "96e0bc24",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Dentro de estos datos no se presenta ningún valor fuera de rango.\n",
+        "\n",
+        "**Fecha de Reporte**"
+      ],
+      "id": "ea08b689"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "df['FECHA_REGISTRO'].value_counts().sort_index().head(20)"
+      ],
+      "id": "f700ee0d",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "df['FECHA_REGISTRO'].value_counts().sort_index().tail(20)"
+      ],
+      "id": "8ee9a607",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Dentro de estos datos no se presenta ningún valor fuera de rango.\n",
+        "\n",
+        "Así, con esta exploración podemos determinar que, aun cuando existe una mala calidad de datos con un gran número de valores erroneos o incompletos es posible hacer un tratamiento de los mismos para lograr realizar un análisis estadístico completo que nos permita responder las preguntas planteadas.\n",
+        "\n",
+        "### Data Preparation\n",
+        "Para preparar los datos para el análisis, se aplicarán las siguientes técnicas:\n",
+        "**Conversión de fechas**\n",
+        "Dentro del archivo *normalizar.py* se encuentran las funciones necesarias para corregir los años irregulares dentro de la columna fecha de nacimiento, como la herramienta **pandas** permite tener años con menos de 4 digitos entonces lo dividimos en dos casos:\n",
+        "\n",
+        "- Si el año solo tiene 2 digitos y es menor a 26, los dos ultimos digitos del año actual, entonces se le suma este valor a 2000. Si el mayor a 26 se suma al valor 1900.\n",
+        "\n",
+        "- Si el año tiene 3 digitos entonces revisaremos sus valores inciales, si empieza con 19 se agregará un 0 al final para tener un número entre 1900 y 1990. Si empieza con 20 se hace exactamente lo mismo, pero ahora nos dara un valor entre 2000 y 2990. Si no cae en ninguno de estos dos casos se le suma 1000 al valor.\n",
+        "\n",
+        "Después de este proceso se hace una verificación de la cota susperior de los años, verificando que no pasen de cierto año:\n",
+        "\n",
+        "- Si resulta ser mayor a 2100 se toman los dos ultimos digitos y se reconstruye la fecha para que tenga sentido  dentro del siglo XX/XXI\n",
+        "\n",
+        "- Si esta entre 2026 y 2100 le restamos 100 al valor.\n",
+        "\n",
+        "En todos estos casos el resultado de aplicar las operaciones se vuelve el nuevo valor de año. Además, se verifico que para cada víctima la fecha de nacimiento tuviera sentido, tomando como ancla la fecha de desaparición o de registro y restandole 100 para obtener el aproximado de nacimiento. Si no es posible validar la coherencia el valor se marca como nulo.\n",
+        "\n",
+        "Finalmente después de todo este proceso, se convierten todos los datos actualizados al tipo *datetime* y si existe algún error se marca como nulo.\n",
+        "\n",
+        "**Manejo de Duplicados**\n",
+        "\n",
+        "Como se indico con anterioridad, por la falta de más información sobre las víctimas se considerará que dentro de este data set no existen duplicados. Pues de otra forma podriamos eliminar información importante para que una persona pueda volver con sus familiares.\n",
+        "\n",
+        "**Limpieza de texto**\n",
+        "\n",
+        "Dentro de las variables categóricas no se encontro ninguna necesidad de normalizar el texto, pues no habian errores ortográficos o de puntuación que nos dieran categorías extras repetidas. \n",
+        "\n",
+        "A pesar de que en la primera parte de este reporte se menciono que la columna **Estatus** contaba con dos valores similares *desaparecida* y *no localizada*, al no contar con mayor información sobre estas categorías, no pudimos determinar si existía o no una diferencia entre ambas, optando por no procedes con este cambio.\n",
+        "\n",
+        "**Manejo de valores faltantes**\n",
+        "\n",
+        "En el archovo *input_data.py* se imputan los valores para aquellas columnas que presentan valores nulos:\n",
+        "\n",
+        "- *Fecha de Nacimiento:* Se calcula la media de esta columna y se remplaza con este a los valores faltantes.\n",
+        "\n",
+        "- *Fecha de Desaparición:* Calculamos la mediana por estado y remplazamos con los resultados a los valores faltantes. Si al terminar este proceso siguen habiendo nulos, se remplazan por la mediana global.\n",
+        "\n",
+        "- *Fecha de Registro:* Se iguala a la de desaparición.\n",
+        "\n",
+        "### Modelling\n",
+        "En este caso, el objetivo es realizar un análisis descriptivo y exploratorio, por lo que no se aplicarán modelos predictivos. Sin embargo, dependiendo de los hallazgos, se podrían aplicar técnicas de clustering para identificar grupos de casos similares o modelos de clasificación para predecir el estado de las víctimas.\n",
+        "\n",
+        "# Correlación\n",
+        "Se generó la matriz de correlación considerando únicamente las variables numéricas del dataset, con el objetivo de identificar relaciones lineales entre ellas. "
+      ],
+      "id": "0a265d10"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "DATA_IMPUTED = \"../data/input_data/data_imputed.csv\"\n",
+        "\n",
+        "dfImputed = pd.read_csv(DATA_IMPUTED)\n",
+        "\n",
+        "corr = dfImputed.corr(numeric_only=True)\n",
+        "\n",
+        "plt.figure()\n",
+        "\n",
+        "sns.heatmap(corr, annot=True)\n",
+        "\n",
+        "plt.title(\"Matriz de correlación\")\n",
+        "plt.show()"
+      ],
+      "id": "95f693d4",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "**Correlaciones Fuertes**"
+      ],
+      "id": "dd8739db"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "corr_unstack = corr.unstack()\n",
+        "\n",
+        "# Quitar correlaciones consigo mismo\n",
+        "corr_unstack = corr_unstack[corr_unstack != 1]\n",
+        "\n",
+        "# Ordenar\n",
+        "corr_ordenadas = corr_unstack.sort_values(ascending=False)\n",
+        "\n",
+        "corr_ordenadas.head(10)"
+      ],
+      "id": "b4e2e514",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Notemos que alcanzan valores cercanos a 1, sugiriendo que estas variables se encuentran altamente relacionadas posiblemente porque muchas representan información categórica transformada a valores numéricos.\n",
+        "\n",
+        "La variable que predomina en estas relaciones es *ESTATUS_MAP*, la cual corresponde a la representación numérica de la variable categórica *ESTATUS*. La alta correlación observada con el resto de variables puede explicarse ya que factores como la fecha de desaparición y la fecha de registro influyen en la rapidez con la que se activan los mecanismos de búsqueda.\n",
+        "\n",
+        "**Correlaciones Débiles**"
+      ],
+      "id": "83c11ebf"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "corr_ordenadas.tail(10)"
+      ],
+      "id": "01a32ff5",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "De entre estas variables la que más se repite es *CVE_ENT* que corresponde a una clave geográfica de la entidad federativa, por lo que tiene sentido que su codificación numérica no implique ninguna relación con el resto.\n",
+        "\n",
+        "# Conclusiones\n",
+        "## Limitaciones del Análisis\n",
+        "Una de las mayores límitaciones que presenta este análisis es la poca información que se sabe de los casos para lograr determinar con certeza si existen duplicados, pues estos podrian analizar modelos posteriores que se realicen sobre este data set.\n",
+        "\n",
+        "Además, la presencia de datos *Confidenciales* nos impide llegar a análisis profundos de los casos, limitandonos tanto en aspectos de fechas, como de estados, así como conocer si existen personas que ya han sido localizadas.\n",
+        "\n",
+        "## Hallazgos\n",
+        "Entre los hallazgos que encontramos en este dataset se encuentran:\n",
+        "\n",
+        "1. Dado que se cuentan con varios datos *Confidenciales* dentro de las columnas podemos obtener la tasa de los mismos por estado de la siguiente manera:"
+      ],
+      "id": "f1aea0c8"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#Detectamos valores confidenciales en todo el dataset\n",
+        "mask_conf = dfImputed.apply(lambda row: row.astype(str).str.contains(\"CONFIDENCIAL\", case=False, na=False).any(), axis=1)\n",
+        "\n",
+        "dfImputed[\"TIENE_CONFIDENCIAL\"] = mask_conf\n",
+        "\n",
+        "tasa_conf = dfImputed.groupby(\"ENTIDAD\")[\"TIENE_CONFIDENCIAL\"].mean() * 100\n",
+        "tasa_conf.sort_values(ascending=False)"
+      ],
+      "id": "3340d3a1",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "tasa_conf.plot(kind=\"bar\")\n",
+        "plt.title(\"Porcentaje de registros con información confidencial por entidad\")\n",
+        "plt.ylabel(\"%\")\n",
+        "plt.show()"
+      ],
+      "id": "83cbb933",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Donde observamos que la entidad con mayor tasa de confidencialidad es Jalisco y la de menor Chihuahua.\n",
+        "\n",
+        "2. Para obtener las desapariciones por estado podemos realizar un simple conteo:"
+      ],
+      "id": "7798ae4e"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "dfImputed[\"ENTIDAD\"].value_counts()"
+      ],
+      "id": "7334ebd3",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Sin embargo, gracias a que se realizo un proceso exahustivo para la correcta normalización de fechas podemos obtener también el promedio de las desapariciones por año dentro de cada entidad:"
+      ],
+      "id": "9ce92c92"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#Obtenemos año\n",
+        "fechas = pd.to_datetime(dfImputed[\"FECHA_DESAPARICION\"], errors=\"coerce\")\n",
+        "dfImputed[\"AÑO\"] = fechas.dt.year\n",
+        "\n",
+        "conteo = dfImputed.groupby([\"ENTIDAD\", \"AÑO\"]).size()\n",
+        "\n",
+        "promedio_estado = conteo.groupby(\"ENTIDAD\").mean()\n",
+        "promedio_estado.sort_values(ascending=False)"
+      ],
+      "id": "327f28d7",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "promedio_estado.plot(kind=\"bar\")\n",
+        "plt.title(\"Promedio de desapariciones por entidad por año\")\n",
+        "plt.ylabel(\"Promedio\")\n",
+        "plt.show()"
+      ],
+      "id": "b774275c",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Donde el que presenta mayor promedio de desapariciones es Tamaulipas y el de menor es Tlaxcala.\n",
+        "\n",
+        "3. A su vez también podemos obtener la edad promedio de todas las personas registradas como desaparecidas:"
+      ],
+      "id": "e38cccc4"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "dfImputed[\"FECHA_NACIMIENTO\"] = pd.to_datetime(dfImputed[\"FECHA_NACIMIENTO\"], errors=\"coerce\")\n",
+        "dfImputed[\"FECHA_DESAPARICION\"] = pd.to_datetime(dfImputed[\"FECHA_DESAPARICION\"], errors=\"coerce\")\n",
+        "\n",
+        "dfImputed[\"EDAD\"] = (dfImputed[\"FECHA_DESAPARICION\"] - dfImputed[\"FECHA_NACIMIENTO\"]).dt.days / 365\n",
+        "\n",
+        "promedioEdad = dfImputed[\"EDAD\"].mean()\n",
+        "\n",
+        "print(f\"La edad promedio de desaparición es {promedioEdad:.2f}\")"
+      ],
+      "id": "1b7a1efa",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "4. A su vez, podemos obtener este promedio por cada una de las entidades:"
+      ],
+      "id": "653ae5e1"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "dfImputed.groupby(\"ENTIDAD\")[\"EDAD\"].mean()"
+      ],
+      "id": "da2664d0",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "5. Dado los periodos de tiempo que abarca este data set, podemos calcular la tasa de desapariciones por diferentes periodos de tiempo. Primero lo abordaremos por años:"
+      ],
+      "id": "067dfc11"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "fechas = pd.to_datetime(dfImputed[\"FECHA_DESAPARICION\"], errors=\"coerce\") \n",
+        "dfImputed[\"AÑO\"] = fechas.dt.year\n",
+        "\n",
+        "desapariciones_por_año = dfImputed[\"AÑO\"].value_counts().sort_index()\n",
+        "\n",
+        "desapariciones_por_año"
+      ],
+      "id": "7fbed308",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "desapariciones_por_año.plot(kind=\"line\")\n",
+        "plt.title(\"Desapariciones por año\")\n",
+        "plt.ylabel(\"Número de casos\")\n",
+        "plt.show()"
+      ],
+      "id": "7ea4b8e8",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Notemos que el número de desapariciones es bastante bajo antes de la decada de los 2010's pero tiene sus primeros picos altos durante esta decada e inicios de los 2020.\n",
+        "\n",
+        "6. El anterior análisis puede abordarse también por mes de la siguiente manera:"
+      ],
+      "id": "02ac6794"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "dfImputed[\"MES\"] = fechas.dt.month\n",
+        "\n",
+        "desapariciones_por_mes = dfImputed[\"MES\"].value_counts().sort_index()\n",
+        "desapariciones_por_mes"
+      ],
+      "id": "77fa9436",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "desapariciones_por_mes.plot(kind=\"bar\")\n",
+        "plt.title(\"Desapariciones por mes\")\n",
+        "plt.ylabel(\"Número de casos\")\n",
+        "plt.show()"
+      ],
+      "id": "e4b14b66",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "El mes donde más numero de gente se reporta como desaparecida es Enero y en el que menor número de casos hay Octubre.\n",
+        "\n",
+        "7. Y el realizar un análisis tanto por año como por mes nos arroja las siguientes observaciones:"
+      ],
+      "id": "98f29d3d"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "dfImputed[\"AÑO_MES\"] = fechas.dt.to_period(\"M\")\n",
+        "\n",
+        "periodos = dfImputed[\"AÑO_MES\"].value_counts().sort_index()\n",
+        "periodos"
+      ],
+      "id": "158cb9bd",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "periodos.plot(kind=\"line\")\n",
+        "plt.title(\"Desapariciones por periodo (año-mes)\")\n",
+        "plt.ylabel(\"Casos\")\n",
+        "plt.show()"
+      ],
+      "id": "31a32951",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Aunque la tabla nos da la información compacta de todos los datos, al ordenar podemos obtener el año junto con el mes de los mayores reportes siendo este Enero del 2016."
+      ],
+      "id": "81eac0af"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "periodos.sort_values(ascending=False).head(10)"
+      ],
+      "id": "9483ceae",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Y si obtenemos los últimos valores de este orden, veremos que los años con el menor número de reportes son alrededor de los años 60's y 70's."
+      ],
+      "id": "72dc5e09"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "periodos.sort_values(ascending=False).tail(10)"
+      ],
+      "id": "8fb74eba",
+      "execution_count": null,
+      "outputs": []
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "name": "python3",
+      "language": "python",
+      "display_name": "Python 3 (ipykernel)",
+      "path": "C:\\Users\\Nancy\\AppData\\Roaming\\Python\\share\\jupyter\\kernels\\python3"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+}
