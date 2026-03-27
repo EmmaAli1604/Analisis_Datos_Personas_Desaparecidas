@@ -66,9 +66,16 @@ df.head()
 ## Aplicación de CRISP-DM al dataset asignado
 ### Comprensión del Negocio
 El objetivo de este análisis es identificar patrones y características relevantes en los registros de personas desaparecidas en México. Algunas preguntas clave incluyen:
+
 - ¿En qué periodos se concentran más desapariciones?
+
 - ¿Qué regiones presentan mayor incidencia?
+
 - ¿Existen patrones en edad o sexo?
+
+- ¿Cuál es la tasa de información confidencial por estado?
+
+- ¿Cuál es el promedio de desapariciones por estado y de acuerdo al estatus?
 
 En las secciones anteriores se ha desglosado un poco de la exploración inicial del data set, identificando los tipos de datos y las principales inconsistencias de tipos en columnas como las de fecha.
 
@@ -93,43 +100,112 @@ Revisaremos aquellas columnas que deban tener valores constantes, como sexo, ent
 ```{python}
 df['SEXO'].unique()
 ```
+Se detectaron dos tipo de valores extraños: *Confidencial* e *Indeterminado*. Dentro de este dataset hay muchos valores marcados como confidenciales, sin embargo, el uso de *Indeterminado* puede referirse a un valor perdido como para personas desaparecidas que no caen en la binaridad de género.
 
 **ESTATUS_VICTIMA**
 ```{python}
 df['ESTATUS_VICTIMA'].unique()
 ```
+Como se menciono antes se usa *Confidencial* para tratar valores reservados, pero notemos que si una persona esta *Desaparecida* implica que no se le ha localizado, por lo que es redundante tener dos valores categóricas diferentes que significan lo mismo.
 
 **ENTIDAD**
 ```{python}
 df['ENTIDAD'].unique()
 ```
+En esta columna se coloca un *Se Desconoce* para los valores faltantes.
 
 **MUNICIPIO**
 ```{python}
 df['MUNICIPIO'].unique()
 ```
+Vuelve a usarse la palabra *Confidencial* para aquellos datos reservados.
 
+Lo siguiente lograr identificar la existencia de valores duplicados. Además del sexo, fecha de nacimiento y lugar de desaparición no tenemos ningún otro dato extra sobre las victimas, solo una columna *id*, la cual no se sabe si esta relacionada con otra base de datos que nos de datos más sensibles como el nombre de la persona o solo fue la forma de identificar cada uno de los registros dentro de este data set. 
 ```{python}
-df.describe()
+df['ID_VICTIMA'].unique()
 ```
+Notemos que tenemos exactamente el mismo número de valores únicos en la columna *ID_VICTIMA* como columnas dentro de la tabla completa. Por la falta de datos que nos indiquen con presición la existencia de duplicados, supondremos que no los hay, de lo contrario podriamos eliminar casos que parecen ser el mismo pero que en realidad no lo son.
 
+Por el análisis pequeño hecho en la primera parte de este reporte, ya sabemos que todas las columnas correspondientes a fechas presentan valores erroneos que no permiten la conversión al tipo *datetime* de manera automática. Revisamo cada una de las diferentes columnas para tener una clara comprensión de los errores:
+
+**Fecha de Nacimiento**
+```{python}
+df['FECHA_NACIMIENTO'].value_counts().sort_index().head(20)
+```
+```{python}
+df['FECHA_NACIMIENTO'].value_counts().sort_index().tail(20)
+```
+Notemos que en esta columna existen valores con años imposibles, pues nos habla de gente que nacio hace más de un siglo o de personas que ni siquiera han nacido.
+
+**Fecha de Desaparición**
+```{python}
+df['FECHA_DESAPARICION'].value_counts().sort_index().head(20)
+```
+```{python}
+df['FECHA_DESAPARICION'].value_counts().sort_index().tail(20)
+```
+Dentro de estos datos no se presenta ningún valor fuera de rango.
+
+**Fecha de Reporte**
+```{python}
+df['FECHA_REGISTRO'].value_counts().sort_index().head(20)
+```
+```{python}
+df['FECHA_REGISTRO'].value_counts().sort_index().tail(20)
+```
+Dentro de estos datos no se presenta ningún valor fuera de rango.
+
+Así, con esta exploración podemos determinar que, aun cuando existe una mala calidad de datos con un gran número de valores erroneos o incompletos es posible hacer un tratamiento de los mismos para lograr realizar un análisis estadístico completo que nos permita responder las preguntas planteadas.
 
 ### Data Preparation
 Para preparar los datos para el análisis, se aplicarán las siguientes técnicas:
 **Conversión de fechas**
-**Eliminación de duplicados**
+Dentro del archivo *normalizar.py* se encuentran las funciones necesarias para corregir los años irregulares dentro de la columna fecha de nacimiento, como la herramienta **pandas** permite tener años con menos de 4 digitos entonces lo dividimos en dos casos:
+
+- Si el año solo tiene 2 digitos y es menor a 26, los dos ultimos digitos del año actual, entonces se le suma este valor a 2000. Si el mayor a 26 se suma al valor 1900.
+
+- Si el año tiene 3 digitos entonces revisaremos sus valores inciales, si empieza con 19 se agregará un 0 al final para tener un número entre 1900 y 1990. Si empieza con 20 se hace exactamente lo mismo, pero ahora nos dara un valor entre 2000 y 2990. Si no cae en ninguno de estos dos casos se le suma 1000 al valor.
+
+Después de este proceso se hace una verificación de la cota susperior de los años, verificando que no pasen de cierto año:
+
+- Si resulta ser mayor a 2100 se toman los dos ultimos digitos y se reconstruye la fecha para que tenga sentido  dentro del siglo XX/XXI
+
+- Si esta entre 2026 y 2100 le restamos 100 al valor.
+
+En todos estos casos el resultado de aplicar las operaciones se vuelve el nuevo valor de año. Además, se verifico que para cada víctima la fecha de nacimiento tuviera sentido, tomando como ancla la fecha de desaparición o de registro y restandole 100 para obtener el aproximado de nacimiento. Si no es posible validar la coherencia el valor se marca como nulo.
+
+Finalmente después de todo este proceso, se convierten todos los datos actualizados al tipo *datetime* y si existe algún error se marca como nulo.
+
+**Manejo de Duplicados**
+
+Como se indico con anterioridad, por la falta de más información sobre las víctimas se considerará que dentro de este data set no existen duplicados. Pues de otra forma podriamos eliminar información importante para que una persona pueda volver con sus familiares.
+
 **Limpieza de texto**
+
+
 **Manejo de valores faltantes**
+
+En el archovo *input_data.py* se imputan los valores para aquellas columnas que presentan valores nulos o desconocidos:
+
+- *Fecha de Nacimiento:* Se calcula la media de esta columna y se remplaza con este a los valores faltantes.
+
+- *Fecha de Desaparición:* Calculamos la mediana por estado y remplazamos con los resultados a los valores faltantes. Si al terminar este proceso siguen habiendo nulos, se remplazan por la mediana global.
+
+- *Fecha de Registro:* Se iguala a la de desaparición.
 
 ### Modelling
 En este caso, el objetivo es realizar un análisis descriptivo y exploratorio, por lo que no se aplicarán modelos predictivos. Sin embargo, dependiendo de los hallazgos, se podrían aplicar técnicas de clustering para identificar grupos de casos similares o modelos de clasificación para predecir el estado de las víctimas.
 
-# Evaluation
+# Cálculo de medidas con visualizaciones e interpretación
+## Medidas de localización
+## Medidas de variabilidad
+## Medidas de heterogeneidad
+## Medidas de concentración
 
-Se evaluará la calidad de los datos y posibles sesgos, como subregistro o inconsistencias en los reportes.
+# Correlación
 
-# Deployment
-
-El análisis es presentado mediante este reporte en Quarto, incluyendo visualizaciones y conclusiones.
+# Conclusiones
+## Limitaciones del Análisis
+## Hallazgos
 
 
