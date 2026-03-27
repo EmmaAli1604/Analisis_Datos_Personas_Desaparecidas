@@ -1,9 +1,10 @@
 ---
 title: "Tarea 2: Personas desaparecidas en México."
-author: "Emma Alicia Jimenez Sanchez - 320046155
-        Nancy Elena del Valle - 117001778
-        Leonardo Rafael Ortiz Cervantes - 320059362"
-format: html
+author: 
+        - "Emma Alicia Jimenez Sanchez - 320046155"
+        - "Nancy Elena del Valle - 117001778"
+        - "Leonardo Rafael Ortiz Cervantes - 320059362"
+format: pdf
 jupyter: python3
 ---
 
@@ -255,10 +256,120 @@ Además, la presencia de datos *Confidenciales* nos impide llegar a análisis pr
 ## Hallazgos
 Entre los hallazgos que encontramos en este dataset se encuentran:
 
-1. En la columna *ESTATUS* se presentan los valores *Desaparecida* y *No localizada*, apesar de que ambos parecen referirse a la misma cosa no puede saberse con certeza. Se analizaron los primeros 20 registros con ambos estatus y no había una diferencia significativa en la iformación que se tenia de los casos, pero se mantuvieron sin cambios durante el procesamiento del data set pues no hay una forma segura de determinar si realmente estan describiendo la misma cosa.
+1. Dado que se cuentan con varios datos *Confidenciales* dentro de las columnas podemos obtener la tasa de los mismos por estado de la siguiente manera:
 
-2. La variable con la correlación más fuerte es *ESTATUS_MAP*, pues factores como la fecha de registro influyen en la rapidez con la que se activan los mecanismos de búsqueda.
+```{python}
+#Detectamos valores confidenciales en todo el dataset
+mask_conf = dfImputed.apply(lambda row: row.astype(str).str.contains("CONFIDENCIAL", case=False, na=False).any(), axis=1)
 
-3. La única columna que presentaba datos extraños en su almacenamiento era *FECHA_NACIMIENTO*, que contenia años incompletos con datos de personas que habian nacido hace más de dos siglos o que aun no nacian. 
+dfImputed["TIENE_CONFIDENCIAL"] = mask_conf
+
+tasa_conf = dfImputed.groupby("ENTIDAD")["TIENE_CONFIDENCIAL"].mean() * 100
+tasa_conf.sort_values(ascending=False)
+```
+```{python}
+tasa_conf.plot(kind="bar")
+plt.title("Porcentaje de registros con información confidencial por entidad")
+plt.ylabel("%")
+plt.show()
+```
+Donde observamos que la entidad con mayor tasa de confidencialidad es Jalisco y la de menor Chihuahua.
+
+2. Para obtener las desapariciones por estado podemos realizar un simple conteo:
+```{python}
+dfImputed["ENTIDAD"].value_counts()
+```
+Sin embargo, gracias a que se realizo un proceso exahustivo para la correcta normalización de fechas podemos obtener también el promedio de las desapariciones por año dentro de cada entidad:
+```{python}
+#Obtenemos año
+fechas = pd.to_datetime(dfImputed["FECHA_DESAPARICION"], errors="coerce")
+dfImputed["AÑO"] = fechas.dt.year
+
+conteo = dfImputed.groupby(["ENTIDAD", "AÑO"]).size()
+
+promedio_estado = conteo.groupby("ENTIDAD").mean()
+promedio_estado.sort_values(ascending=False)
+```
+
+```{python}
+promedio_estado.plot(kind="bar")
+plt.title("Promedio de desapariciones por entidad por año")
+plt.ylabel("Promedio")
+plt.show()
+```
+Donde el que presenta mayor promedio de desapariciones es Tamaulipas y el de menor es Tlaxcala.
+
+3. A su vez también podemos obtener la edad promedio de todas las personas registradas como desaparecidas:
+```{python}
+dfImputed["FECHA_NACIMIENTO"] = pd.to_datetime(dfImputed["FECHA_NACIMIENTO"], errors="coerce")
+dfImputed["FECHA_DESAPARICION"] = pd.to_datetime(dfImputed["FECHA_DESAPARICION"], errors="coerce")
+
+dfImputed["EDAD"] = (dfImputed["FECHA_DESAPARICION"] - dfImputed["FECHA_NACIMIENTO"]).dt.days / 365
+
+promedioEdad = dfImputed["EDAD"].mean()
+
+print(f"La edad promedio de desaparición es {promedioEdad:.2f}")
+```
+
+4. A su vez, podemos obtener este promedio por cada una de las entidades:
+```{python}
+dfImputed.groupby("ENTIDAD")["EDAD"].mean()
+```
+
+5. Dado los periodos de tiempo que abarca este data set, podemos calcular la tasa de desapariciones por diferentes periodos de tiempo. Primero lo abordaremos por años:
+```{python}
+fechas = pd.to_datetime(dfImputed["FECHA_DESAPARICION"], errors="coerce") 
+dfImputed["AÑO"] = fechas.dt.year
+
+desapariciones_por_año = dfImputed["AÑO"].value_counts().sort_index()
+
+desapariciones_por_año
+```
+
+```{python}
+desapariciones_por_año.plot(kind="line")
+plt.title("Desapariciones por año")
+plt.ylabel("Número de casos")
+plt.show()
+```
+Notemos que el número de desapariciones es bastante bajo antes de la decada de los 2010's pero tiene sus primeros picos altos durante esta decada e inicios de los 2020.
+
+6. El anterior análisis puede abordarse también por mes de la siguiente manera:
+```{python}
+dfImputed["MES"] = fechas.dt.month
+
+desapariciones_por_mes = dfImputed["MES"].value_counts().sort_index()
+desapariciones_por_mes
+```
+```{python}
+desapariciones_por_mes.plot(kind="bar")
+plt.title("Desapariciones por mes")
+plt.ylabel("Número de casos")
+plt.show()
+```
+El mes donde más numero de gente se reporta como desaparecida es Enero y en el que menor número de casos hay Octubre.
+
+7. Y el realizar un análisis tanto por año como por mes nos arroja las siguientes observaciones:
+```{python}
+dfImputed["AÑO_MES"] = fechas.dt.to_period("M")
+
+periodos = dfImputed["AÑO_MES"].value_counts().sort_index()
+periodos
+```
+
+```{python}
+periodos.plot(kind="line")
+plt.title("Desapariciones por periodo (año-mes)")
+plt.ylabel("Casos")
+plt.show()
+```
+Aunque la tabla nos da la información compacta de todos los datos, al ordenar podemos obtener el año junto con el mes de los mayores reportes siendo este Enero del 2016.
+```{python}
+periodos.sort_values(ascending=False).head(10)
+```
+Y si obtenemos los últimos valores de este orden, veremos que los años con el menor número de reportes son alrededor de los años 60's y 70's.
+```{python}
+periodos.sort_values(ascending=False).tail(10)
+``` 
 
 
