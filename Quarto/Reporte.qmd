@@ -13,10 +13,12 @@ jupyter: python3
 El data set utilizado en este reporte corresponde al archivo data_secretariado.csv, este contiene información sobre las personas que han sido reportadas como desaparecidas en el país. 
 
 Sus caracteristicas se describen a continuación:
-
 ```{python}
 import pandas as pd
-
+import seaborn as sns
+import matplotlib.pyplot as plt
+```
+```{python}
 DATA_RAW = "../data/raw/data_secretariado.csv"
 
 df = pd.read_csv(DATA_RAW)
@@ -182,10 +184,13 @@ Como se indico con anterioridad, por la falta de más información sobre las ví
 
 **Limpieza de texto**
 
+Dentro de las variables categóricas no se encontro ninguna necesidad de normalizar el texto, pues no habian errores ortográficos o de puntuación que nos dieran categorías extras repetidas. 
+
+A pesar de que en la primera parte de este reporte se menciono que la columna **Estatus** contaba con dos valores similares *desaparecida* y *no localizada*, al no contar con mayor información sobre estas categorías, no pudimos determinar si existía o no una diferencia entre ambas, optando por no procedes con este cambio.
 
 **Manejo de valores faltantes**
 
-En el archovo *input_data.py* se imputan los valores para aquellas columnas que presentan valores nulos o desconocidos:
+En el archovo *input_data.py* se imputan los valores para aquellas columnas que presentan valores nulos:
 
 - *Fecha de Nacimiento:* Se calcula la media de esta columna y se remplaza con este a los valores faltantes.
 
@@ -203,9 +208,57 @@ En este caso, el objetivo es realizar un análisis descriptivo y exploratorio, p
 ## Medidas de concentración
 
 # Correlación
+Se generó la matriz de correlación considerando únicamente las variables numéricas del dataset, con el objetivo de identificar relaciones lineales entre ellas. 
+
+```{python}
+DATA_IMPUTED = "../data/input_data/data_imputed.csv"
+
+dfImputed = pd.read_csv(DATA_IMPUTED)
+
+corr = dfImputed.corr(numeric_only=True)
+
+plt.figure()
+
+sns.heatmap(corr, annot=True)
+
+plt.title("Matriz de correlación")
+plt.show()
+```
+**Correlaciones Fuertes**
+```{python}
+corr_unstack = corr.unstack()
+
+# Quitar correlaciones consigo mismo
+corr_unstack = corr_unstack[corr_unstack != 1]
+
+# Ordenar
+corr_ordenadas = corr_unstack.sort_values(ascending=False)
+
+corr_ordenadas.head(10)
+```
+Notemos que alcanzan valores cercanos a 1, sugiriendo que estas variables se encuentran altamente relacionadas posiblemente porque muchas representan información categórica transformada a valores numéricos.
+
+La variable que predomina en estas relaciones es *ESTATUS_MAP*, la cual corresponde a la representación numérica de la variable categórica *ESTATUS*. La alta correlación observada con el resto de variables puede explicarse ya que factores como la fecha de desaparición y la fecha de registro influyen en la rapidez con la que se activan los mecanismos de búsqueda.
+
+**Correlaciones Débiles**
+```{python}
+corr_ordenadas.tail(10)
+```
+De entre estas variables la que más se repite es *CVE_ENT* que corresponde a una clave geográfica de la entidad federativa, por lo que tiene sentido que su codificación numérica no implique ninguna relación con el resto.
 
 # Conclusiones
 ## Limitaciones del Análisis
+Una de las mayores límitaciones que presenta este análisis es la poca información que se sabe de los casos para lograr determinar con certeza si existen duplicados, pues estos podrian analizar modelos posteriores que se realicen sobre este data set.
+
+Además, la presencia de datos *Confidenciales* nos impide llegar a análisis profundos de los casos, limitandonos tanto en aspectos de fechas, como de estados, así como conocer si existen personas que ya han sido localizadas.
+
 ## Hallazgos
+Entre los hallazgos que encontramos en este dataset se encuentran:
+
+1. En la columna *ESTATUS* se presentan los valores *Desaparecida* y *No localizada*, apesar de que ambos parecen referirse a la misma cosa no puede saberse con certeza. Se analizaron los primeros 20 registros con ambos estatus y no había una diferencia significativa en la iformación que se tenia de los casos, pero se mantuvieron sin cambios durante el procesamiento del data set pues no hay una forma segura de determinar si realmente estan describiendo la misma cosa.
+
+2. La variable con la correlación más fuerte es *ESTATUS_MAP*, pues factores como la fecha de registro influyen en la rapidez con la que se activan los mecanismos de búsqueda.
+
+3. La única columna que presentaba datos extraños en su almacenamiento era *FECHA_NACIMIENTO*, que contenia años incompletos con datos de personas que habian nacido hace más de dos siglos o que aun no nacian. 
 
 
