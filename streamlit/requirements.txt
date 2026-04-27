@@ -1,0 +1,7 @@
+streamlit>=1.35
+pandas
+plotly
+sqlalchemy
+pydantic-settings
+python-dotenv
+pytest
