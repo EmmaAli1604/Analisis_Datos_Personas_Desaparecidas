@@ -1,0 +1,7 @@
+from .streamlit.app import main as streamlit_main
+
+def main():
+    streamlit_main()
+
+if __name__ == "__main__":
+    main()
