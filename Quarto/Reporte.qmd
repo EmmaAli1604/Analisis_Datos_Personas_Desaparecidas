@@ -1,11 +1,23 @@
 ---
 title: "Tarea 2: Personas desaparecidas en México."
-author: "Emma Alicia Jimenez Sanchez - 320046155
-        Nancy Elena del Valle - 117001778
-        Leonardo Rafael Ortiz Cervantes - 320059362"
-format: html
+author: 
+        - "Emma Alicia Jimenez Sanchez - 320046155"
+        - "Nancy Elena del Valle Vera - 117001778"
+        - "Leonardo Rafael Ortiz Cervantes - 320059362"
+format: pdf
 jupyter: python3
 ---
+# Empresa y metodología de Minería de Datos
+## Emma Alicia Jimenez Sanchez
+IBM es una de las empresas más importantes en el ámbito de la analítica de datos y la inteligencia artificial. Para el desarrollo de proyectos de minería de datos, utiliza principalmente la metodología CRISP-DM  la cual está integrada en herramientas como SPSS Modeler. 
+https://www.ibm.com/docs/es/spss-modeler/18.6.0?topic=overview-crisp-dm-in-spss-modeler
+
+## Nancy Elena del Valle Vera
+Google utiliza un enfoque integral y modernizado para la minería y ciencia de datos, centrado en la nube, el aprendizaje automático (ML) y la agilidad, frecuentemente estructurado bajo los principios de MLOps y analítica de datos unificada en Google Cloud
+https://cloud.google.com/discover/what-is-mlops?hl=es
+
+## Leonardo Rafael Ortiz Cervantes
+Oracle desarrolla sus innovaciones en minería de datos apoyándose en la metodología CRISP-DM. Esta estructura permite que Oracle Data Mining integre algoritmos avanzados directamente en su base de datos, facilitando la creación de modelos predictivos y la detección de patrones en sus productos. https://academia-lab.com/enciclopedia/mineria-de-datos-de-oracle/?utm_source=copilot.com#google_vignette
 
 # Descripción del Dataset
 
@@ -13,10 +25,12 @@ jupyter: python3
 El data set utilizado en este reporte corresponde al archivo data_secretariado.csv, este contiene información sobre las personas que han sido reportadas como desaparecidas en el país. 
 
 Sus caracteristicas se describen a continuación:
-
 ```{python}
 import pandas as pd
-
+import seaborn as sns
+import matplotlib.pyplot as plt
+```
+```{python}
 DATA_RAW = "../data/raw/data_secretariado.csv"
 
 df = pd.read_csv(DATA_RAW)
@@ -182,10 +196,13 @@ Como se indico con anterioridad, por la falta de más información sobre las ví
 
 **Limpieza de texto**
 
+Dentro de las variables categóricas no se encontro ninguna necesidad de normalizar el texto, pues no habian errores ortográficos o de puntuación que nos dieran categorías extras repetidas. 
+
+A pesar de que en la primera parte de este reporte se menciono que la columna **Estatus** contaba con dos valores similares *desaparecida* y *no localizada*, al no contar con mayor información sobre estas categorías, no pudimos determinar si existía o no una diferencia entre ambas, optando por no procedes con este cambio.
 
 **Manejo de valores faltantes**
 
-En el archovo *input_data.py* se imputan los valores para aquellas columnas que presentan valores nulos o desconocidos:
+En el archovo *input_data.py* se imputan los valores para aquellas columnas que presentan valores nulos:
 
 - *Fecha de Nacimiento:* Se calcula la media de esta columna y se remplaza con este a los valores faltantes.
 
@@ -196,16 +213,168 @@ En el archovo *input_data.py* se imputan los valores para aquellas columnas que 
 ### Modelling
 En este caso, el objetivo es realizar un análisis descriptivo y exploratorio, por lo que no se aplicarán modelos predictivos. Sin embargo, dependiendo de los hallazgos, se podrían aplicar técnicas de clustering para identificar grupos de casos similares o modelos de clasificación para predecir el estado de las víctimas.
 
-# Cálculo de medidas con visualizaciones e interpretación
-## Medidas de localización
-## Medidas de variabilidad
-## Medidas de heterogeneidad
-## Medidas de concentración
-
 # Correlación
+Se generó la matriz de correlación considerando únicamente las variables numéricas del dataset, con el objetivo de identificar relaciones lineales entre ellas. 
+
+```{python}
+DATA_IMPUTED = "../data/input_data/data_imputed.csv"
+
+dfImputed = pd.read_csv(DATA_IMPUTED)
+
+corr = dfImputed.corr(numeric_only=True)
+
+plt.figure()
+
+sns.heatmap(corr, annot=True)
+
+plt.title("Matriz de correlación")
+plt.show()
+```
+**Correlaciones Fuertes**
+```{python}
+corr_unstack = corr.unstack()
+
+# Quitar correlaciones consigo mismo
+corr_unstack = corr_unstack[corr_unstack != 1]
+
+# Ordenar
+corr_ordenadas = corr_unstack.sort_values(ascending=False)
+
+corr_ordenadas.head(10)
+```
+Notemos que alcanzan valores cercanos a 1, sugiriendo que estas variables se encuentran altamente relacionadas posiblemente porque muchas representan información categórica transformada a valores numéricos.
+
+La variable que predomina en estas relaciones es *ESTATUS_MAP*, la cual corresponde a la representación numérica de la variable categórica *ESTATUS*. La alta correlación observada con el resto de variables puede explicarse ya que factores como la fecha de desaparición y la fecha de registro influyen en la rapidez con la que se activan los mecanismos de búsqueda.
+
+**Correlaciones Débiles**
+```{python}
+corr_ordenadas.tail(10)
+```
+De entre estas variables la que más se repite es *CVE_ENT* que corresponde a una clave geográfica de la entidad federativa, por lo que tiene sentido que su codificación numérica no implique ninguna relación con el resto.
 
 # Conclusiones
 ## Limitaciones del Análisis
+Una de las mayores límitaciones que presenta este análisis es la poca información que se sabe de los casos para lograr determinar con certeza si existen duplicados, pues estos podrian analizar modelos posteriores que se realicen sobre este data set.
+
+Además, la presencia de datos *Confidenciales* nos impide llegar a análisis profundos de los casos, limitandonos tanto en aspectos de fechas, como de estados, así como conocer si existen personas que ya han sido localizadas.
+
 ## Hallazgos
+Entre los hallazgos que encontramos en este dataset se encuentran:
+
+1. Dado que se cuentan con varios datos *Confidenciales* dentro de las columnas podemos obtener la tasa de los mismos por estado de la siguiente manera:
+
+```{python}
+#Detectamos valores confidenciales en todo el dataset
+mask_conf = dfImputed.apply(lambda row: row.astype(str).str.contains("CONFIDENCIAL", case=False, na=False).any(), axis=1)
+
+dfImputed["TIENE_CONFIDENCIAL"] = mask_conf
+
+tasa_conf = dfImputed.groupby("ENTIDAD")["TIENE_CONFIDENCIAL"].mean() * 100
+tasa_conf.sort_values(ascending=False)
+```
+```{python}
+tasa_conf.plot(kind="bar")
+plt.title("Porcentaje de registros con información confidencial por entidad")
+plt.ylabel("%")
+plt.show()
+```
+Donde observamos que la entidad con mayor tasa de confidencialidad es Jalisco y la de menor Chihuahua.
+
+2. Para obtener las desapariciones por estado podemos realizar un simple conteo:
+```{python}
+dfImputed["ENTIDAD"].value_counts()
+```
+Sin embargo, gracias a que se realizo un proceso exahustivo para la correcta normalización de fechas podemos obtener también el promedio de las desapariciones por año dentro de cada entidad:
+```{python}
+#Obtenemos año
+fechas = pd.to_datetime(dfImputed["FECHA_DESAPARICION"], errors="coerce")
+dfImputed["AÑO"] = fechas.dt.year
+
+conteo = dfImputed.groupby(["ENTIDAD", "AÑO"]).size()
+
+promedio_estado = conteo.groupby("ENTIDAD").mean()
+promedio_estado.sort_values(ascending=False)
+```
+
+```{python}
+promedio_estado.plot(kind="bar")
+plt.title("Promedio de desapariciones por entidad por año")
+plt.ylabel("Promedio")
+plt.show()
+```
+Donde el que presenta mayor promedio de desapariciones es Tamaulipas y el de menor es Tlaxcala.
+
+3. A su vez también podemos obtener la edad promedio de todas las personas registradas como desaparecidas:
+```{python}
+dfImputed["FECHA_NACIMIENTO"] = pd.to_datetime(dfImputed["FECHA_NACIMIENTO"], errors="coerce")
+dfImputed["FECHA_DESAPARICION"] = pd.to_datetime(dfImputed["FECHA_DESAPARICION"], errors="coerce")
+
+dfImputed["EDAD"] = (dfImputed["FECHA_DESAPARICION"] - dfImputed["FECHA_NACIMIENTO"]).dt.days / 365
+
+promedioEdad = dfImputed["EDAD"].mean()
+
+print(f"La edad promedio de desaparición es {promedioEdad:.2f}")
+```
+
+4. A su vez, podemos obtener este promedio por cada una de las entidades:
+```{python}
+dfImputed.groupby("ENTIDAD")["EDAD"].mean()
+```
+
+5. Dado los periodos de tiempo que abarca este data set, podemos calcular la tasa de desapariciones por diferentes periodos de tiempo. Primero lo abordaremos por años:
+```{python}
+fechas = pd.to_datetime(dfImputed["FECHA_DESAPARICION"], errors="coerce") 
+dfImputed["AÑO"] = fechas.dt.year
+
+desapariciones_por_año = dfImputed["AÑO"].value_counts().sort_index()
+
+desapariciones_por_año
+```
+
+```{python}
+desapariciones_por_año.plot(kind="line")
+plt.title("Desapariciones por año")
+plt.ylabel("Número de casos")
+plt.show()
+```
+Notemos que el número de desapariciones es bastante bajo antes de la decada de los 2010's pero tiene sus primeros picos altos durante esta decada e inicios de los 2020.
+
+6. El anterior análisis puede abordarse también por mes de la siguiente manera:
+```{python}
+dfImputed["MES"] = fechas.dt.month
+
+desapariciones_por_mes = dfImputed["MES"].value_counts().sort_index()
+desapariciones_por_mes
+```
+```{python}
+desapariciones_por_mes.plot(kind="bar")
+plt.title("Desapariciones por mes")
+plt.ylabel("Número de casos")
+plt.show()
+```
+El mes donde más numero de gente se reporta como desaparecida es Enero y en el que menor número de casos hay Octubre.
+
+7. Y el realizar un análisis tanto por año como por mes nos arroja las siguientes observaciones:
+```{python}
+dfImputed["AÑO_MES"] = fechas.dt.to_period("M")
+
+periodos = dfImputed["AÑO_MES"].value_counts().sort_index()
+periodos
+```
+
+```{python}
+periodos.plot(kind="line")
+plt.title("Desapariciones por periodo (año-mes)")
+plt.ylabel("Casos")
+plt.show()
+```
+Aunque la tabla nos da la información compacta de todos los datos, al ordenar podemos obtener el año junto con el mes de los mayores reportes siendo este Enero del 2016.
+```{python}
+periodos.sort_values(ascending=False).head(10)
+```
+Y si obtenemos los últimos valores de este orden, veremos que los años con el menor número de reportes son alrededor de los años 60's y 70's.
+```{python}
+periodos.sort_values(ascending=False).tail(10)
+``` 
 
 

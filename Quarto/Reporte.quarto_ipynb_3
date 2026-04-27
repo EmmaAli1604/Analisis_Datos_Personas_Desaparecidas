@@ -1,19 +1,35 @@
 {
  "cells": [
   {
-   "cell_type": "markdown",
-   "id": "7ea79b77",
+   "cell_type": "raw",
+   "id": "3d6115a9",
    "metadata": {},
    "source": [
     "---\n",
-    "title: \"Tarea 2: Personas desaparecidas en México.\"\n",
-    "author: \n",
-    "        - \"Emma Alicia Jimenez Sanchez - 320046155\"\n",
-    "        - \"Nancy Elena del Valle - 117001778\"\n",
-    "        - \"Leonardo Rafael Ortiz Cervantes - 320059362\"\n",
+    "title: 'Tarea 2: Personas desaparecidas en México.'\n",
+    "author:\n",
+    "  - Emma Alicia Jimenez Sanchez - 320046155\n",
+    "  - Nancy Elena del Valle Vera - 117001778\n",
+    "  - Leonardo Rafael Ortiz Cervantes - 320059362\n",
     "format: html\n",
-    "jupyter: python3\n",
-    "---\n",
+    "---"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "34423197",
+   "metadata": {},
+   "source": [
+    "# Empresa y metodología de Minería de Datos\n",
+    "## Emma Alicia Jimenez Sanchez\n",
+    "IBM es una de las empresas más importantes en el ámbito de la analítica de datos y la inteligencia artificial. Para el desarrollo de proyectos de minería de datos, utiliza principalmente la metodología CRISP-DM  la cual está integrada en herramientas como SPSS Modeler. \n",
+    "https://www.ibm.com/docs/es/spss-modeler/18.6.0?topic=overview-crisp-dm-in-spss-modeler\n",
+    "## Nancy Elena del Valle Vera\n",
+    "Google utiliza un enfoque integral y modernizado para la minería y ciencia de datos, centrado en la nube, el aprendizaje automático (ML) y la agilidad, frecuentemente estructurado bajo los principios de MLOps y analítica de datos unificada en Google Cloud\n",
+    "https://cloud.google.com/discover/what-is-mlops?hl=es\n",
+    "\n",
+    "## Leonardo Rafael Ortiz Cervantes\n",
+    "Oracle desarrolla sus innovaciones en minería de datos apoyándose en la metodología CRISP-DM. Esta estructura permite que Oracle Data Mining integre algoritmos avanzados directamente en su base de datos, facilitando la creación de modelos predictivos y la detección de patrones en sus productos. https://academia-lab.com/enciclopedia/mineria-de-datos-de-oracle/?utm_source=copilot.com#google_vignette\n",
     "\n",
     "# Descripción del Dataset\n",
     "\n",
@@ -26,7 +42,7 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "0beba8ea",
+   "id": "b39c6935",
    "metadata": {},
    "outputs": [],
    "source": [
@@ -38,7 +54,7 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "b1f85998",
+   "id": "4c45a096",
    "metadata": {},
    "outputs": [
     {
@@ -60,7 +76,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "f7e99ee9",
+   "id": "8309dff4",
    "metadata": {},
    "source": [
     "Con las siguientes columnnas:"
@@ -69,7 +85,7 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "c0a31d4a",
+   "id": "093c0b94",
    "metadata": {},
    "outputs": [
     {
@@ -89,7 +105,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "5a98268f",
+   "id": "21f74daa",
    "metadata": {},
    "source": [
     "Para analizar el periodo de fechas completo es necesario aislar los valores únicos para centrarnos solo en aquellos que tengan sentido. Más adelante veremos si es necesario eliminar o modificar estos valores para un análisis más preciso."
@@ -98,7 +114,7 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "9f0101b3",
+   "id": "fcfa6c12",
    "metadata": {},
    "outputs": [
     {
@@ -113,9 +129,9 @@
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "C:\\Users\\Nancy\\AppData\\Local\\Temp\\ipykernel_10408\\561910658.py:1: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.\n",
+      "C:\\Users\\Nancy\\AppData\\Local\\Temp\\ipykernel_7776\\561910658.py:1: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.\n",
       "  dfDesaparicion = pd.to_datetime(df[\"FECHA_DESAPARICION\"], dayfirst=True, errors='coerce')\n",
-      "C:\\Users\\Nancy\\AppData\\Local\\Temp\\ipykernel_10408\\561910658.py:2: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.\n",
+      "C:\\Users\\Nancy\\AppData\\Local\\Temp\\ipykernel_7776\\561910658.py:2: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.\n",
       "  dfRegistro = pd.to_datetime(df[\"FECHA_REGISTRO\"], dayfirst=True, errors='coerce')\n"
      ]
     }
@@ -131,7 +147,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "4b6e508b",
+   "id": "b32126ed",
    "metadata": {},
    "source": [
     "Analizando los primeros registros del dataset, podemos observar que cada uno corresponde a un registro de los reportes de desaparición realizados en cada entidad."
@@ -140,7 +156,7 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "d430fc09",
+   "id": "ebdbf0c3",
    "metadata": {},
    "outputs": [
     {
@@ -293,7 +309,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "0f19aaad",
+   "id": "3d38feda",
    "metadata": {},
    "source": [
     "# Medidad Descriptivas y Análisis Exploratorio de Datos (EDA)\n",
@@ -336,7 +352,7 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "99972d25",
+   "id": "443a351b",
    "metadata": {},
    "outputs": [
     {
@@ -367,7 +383,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "9c37c49b",
+   "id": "df8e6189",
    "metadata": {},
    "source": [
     "Los porcentajes correspondientes a cada uno de estos se encuentran a continuación:"
@@ -376,7 +392,7 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "f537f56f",
+   "id": "de575a5c",
    "metadata": {},
    "outputs": [
     {
@@ -407,7 +423,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "6fc9404a",
+   "id": "cfad9571",
    "metadata": {},
    "source": [
     "Lo siguiente es identificar los valores almacenados de manera erronea:"
@@ -416,7 +432,7 @@
   {
    "cell_type": "code",
    "execution_count": 8,
-   "id": "72d5e5dd",
+   "id": "98fc19da",
    "metadata": {},
    "outputs": [
     {
@@ -447,7 +463,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "1220e2cd",
+   "id": "8ab3fcb9",
    "metadata": {},
    "source": [
     "La mayoria de las columnas aparece con el tipo **object** lo cual nos indica que puede ser una cadena, diccionario, listas o una mezcla de todo esto. Nos afectará principalmente al tratar de realizar operaciones con las fechas pues, como se vio antes, es necesario convertirlas a datetime para poder calcular la edad aproximada del sujeto.\n",
@@ -460,7 +476,7 @@
   {
    "cell_type": "code",
    "execution_count": 9,
-   "id": "92debeaf",
+   "id": "b6ea0b35",
    "metadata": {},
    "outputs": [
     {
@@ -480,7 +496,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "698f08da",
+   "id": "77549095",
    "metadata": {},
    "source": [
     "Se detectaron dos tipo de valores extraños: *Confidencial* e *Indeterminado*. Dentro de este dataset hay muchos valores marcados como confidenciales, sin embargo, el uso de *Indeterminado* puede referirse a un valor perdido como para personas desaparecidas que no caen en la binaridad de género.\n",
@@ -491,7 +507,7 @@
   {
    "cell_type": "code",
    "execution_count": 10,
-   "id": "259210ad",
+   "id": "ea9a4630",
    "metadata": {},
    "outputs": [
     {
@@ -511,7 +527,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "6f044431",
+   "id": "cbfc17a0",
    "metadata": {},
    "source": [
     "Como se menciono antes se usa *Confidencial* para tratar valores reservados, pero notemos que si una persona esta *Desaparecida* implica que no se le ha localizado, por lo que es redundante tener dos valores categóricas diferentes que significan lo mismo.\n",
@@ -522,7 +538,7 @@
   {
    "cell_type": "code",
    "execution_count": 11,
-   "id": "23fc96a3",
+   "id": "470f3bd3",
    "metadata": {},
    "outputs": [
     {
@@ -549,7 +565,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "1f98b921",
+   "id": "160d2e6f",
    "metadata": {},
    "source": [
     "En esta columna se coloca un *Se Desconoce* para los valores faltantes.\n",
@@ -560,7 +576,7 @@
   {
    "cell_type": "code",
    "execution_count": 12,
-   "id": "6d70f57d",
+   "id": "0e295680",
    "metadata": {},
    "outputs": [
     {
@@ -581,7 +597,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "b365e819",
+   "id": "2ec4d690",
    "metadata": {},
    "source": [
     "Vuelve a usarse la palabra *Confidencial* para aquellos datos reservados.\n",
@@ -592,7 +608,7 @@
   {
    "cell_type": "code",
    "execution_count": 13,
-   "id": "208d5d26",
+   "id": "1f5b70b4",
    "metadata": {},
    "outputs": [
     {
@@ -618,7 +634,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "ecb032bb",
+   "id": "da04a284",
    "metadata": {},
    "source": [
     "Notemos que tenemos exactamente el mismo número de valores únicos en la columna *ID_VICTIMA* como columnas dentro de la tabla completa. Por la falta de datos que nos indiquen con presición la existencia de duplicados, supondremos que no los hay, de lo contrario podriamos eliminar casos que parecen ser el mismo pero que en realidad no lo son.\n",
@@ -631,7 +647,7 @@
   {
    "cell_type": "code",
    "execution_count": 14,
-   "id": "30e629a8",
+   "id": "db23954d",
    "metadata": {},
    "outputs": [
     {
@@ -673,7 +689,7 @@
   {
    "cell_type": "code",
    "execution_count": 15,
-   "id": "3d23c734",
+   "id": "a4ee9ae5",
    "metadata": {},
    "outputs": [
     {
@@ -714,7 +730,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "cee417ae",
+   "id": "8171e29c",
    "metadata": {},
    "source": [
     "Notemos que en esta columna existen valores con años imposibles, pues nos habla de gente que nacio hace más de un siglo o de personas que ni siquiera han nacido.\n",
@@ -725,7 +741,7 @@
   {
    "cell_type": "code",
    "execution_count": 16,
-   "id": "5bd04fb0",
+   "id": "3c451be4",
    "metadata": {},
    "outputs": [
     {
@@ -767,7 +783,7 @@
   {
    "cell_type": "code",
    "execution_count": 17,
-   "id": "4abcd8c2",
+   "id": "7ad9f91a",
    "metadata": {},
    "outputs": [
     {
@@ -808,7 +824,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "821ed8e9",
+   "id": "7f479153",
    "metadata": {},
    "source": [
     "Dentro de estos datos no se presenta ningún valor fuera de rango.\n",
@@ -819,7 +835,7 @@
   {
    "cell_type": "code",
    "execution_count": 18,
-   "id": "f95541d5",
+   "id": "7057aa39",
    "metadata": {},
    "outputs": [
     {
@@ -861,7 +877,7 @@
   {
    "cell_type": "code",
    "execution_count": 19,
-   "id": "8caa9849",
+   "id": "fd5f682c",
    "metadata": {},
    "outputs": [
     {
@@ -902,7 +918,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "49b8617f",
+   "id": "ae654154",
    "metadata": {},
    "source": [
     "Dentro de estos datos no se presenta ningún valor fuera de rango.\n",
@@ -951,12 +967,6 @@
     "### Modelling\n",
     "En este caso, el objetivo es realizar un análisis descriptivo y exploratorio, por lo que no se aplicarán modelos predictivos. Sin embargo, dependiendo de los hallazgos, se podrían aplicar técnicas de clustering para identificar grupos de casos similares o modelos de clasificación para predecir el estado de las víctimas.\n",
     "\n",
-    "# Cálculo de medidas con visualizaciones e interpretación\n",
-    "## Medidas de localización\n",
-    "## Medidas de variabilidad\n",
-    "## Medidas de heterogeneidad\n",
-    "## Medidas de concentración\n",
-    "\n",
     "# Correlación\n",
     "Se generó la matriz de correlación considerando únicamente las variables numéricas del dataset, con el objetivo de identificar relaciones lineales entre ellas. "
    ]
@@ -964,7 +974,7 @@
   {
    "cell_type": "code",
    "execution_count": 20,
-   "id": "2551ba28",
+   "id": "7a2f922c",
    "metadata": {},
    "outputs": [
     {
@@ -1000,7 +1010,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "bd419ebc",
+   "id": "5127c4c2",
    "metadata": {},
    "source": [
     "**Correlaciones Fuertes**"
@@ -1009,7 +1019,7 @@
   {
    "cell_type": "code",
    "execution_count": 21,
-   "id": "f60b0d97",
+   "id": "be68349e",
    "metadata": {},
    "outputs": [
     {
@@ -1047,7 +1057,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "1feaa358",
+   "id": "24433b18",
    "metadata": {},
    "source": [
     "Notemos que alcanzan valores cercanos a 1, sugiriendo que estas variables se encuentran altamente relacionadas posiblemente porque muchas representan información categórica transformada a valores numéricos.\n",
@@ -1060,7 +1070,7 @@
   {
    "cell_type": "code",
    "execution_count": 22,
-   "id": "6572f575",
+   "id": "52e1053f",
    "metadata": {},
    "outputs": [
     {
@@ -1090,7 +1100,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "f7a9d2e5",
+   "id": "9e11c8a6",
    "metadata": {},
    "source": [
     "De entre estas variables la que más se repite es *CVE_ENT* que corresponde a una clave geográfica de la entidad federativa, por lo que tiene sentido que su codificación numérica no implique ninguna relación con el resto.\n",
@@ -1110,7 +1120,7 @@
   {
    "cell_type": "code",
    "execution_count": 23,
-   "id": "fc364919",
+   "id": "042f14af",
    "metadata": {},
    "outputs": [
     {
@@ -1171,7 +1181,7 @@
   {
    "cell_type": "code",
    "execution_count": 24,
-   "id": "3b692e19",
+   "id": "e86dd2c8",
    "metadata": {},
    "outputs": [
     {
@@ -1199,7 +1209,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "abc9a189",
+   "id": "0d21eda7",
    "metadata": {},
    "source": [
     "Donde observamos que la entidad con mayor tasa de confidencialidad es Jalisco y la de menor Chihuahua.\n",
@@ -1210,7 +1220,7 @@
   {
    "cell_type": "code",
    "execution_count": 25,
-   "id": "ee3301e9",
+   "id": "a1f60b29",
    "metadata": {},
    "outputs": [
     {
@@ -1264,7 +1274,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "ecb76a01",
+   "id": "57c1d901",
    "metadata": {},
    "source": [
     "Sin embargo, gracias a que se realizo un proceso exahustivo para la correcta normalización de fechas podemos obtener también el promedio de las desapariciones por año dentro de cada entidad:"
@@ -1273,7 +1283,7 @@
   {
    "cell_type": "code",
    "execution_count": 26,
-   "id": "01cb5268",
+   "id": "9e688619",
    "metadata": {},
    "outputs": [
     {
@@ -1335,7 +1345,7 @@
   {
    "cell_type": "code",
    "execution_count": 27,
-   "id": "8bc89de3",
+   "id": "4c9f3ed5",
    "metadata": {},
    "outputs": [
     {
@@ -1363,7 +1373,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "44b7ef13",
+   "id": "3ea5386d",
    "metadata": {},
    "source": [
     "Donde el que presenta mayor promedio de desapariciones es Tamaulipas y el de menor es Tlaxcala.\n",
@@ -1374,7 +1384,7 @@
   {
    "cell_type": "code",
    "execution_count": 28,
-   "id": "817e75e1",
+   "id": "87973273",
    "metadata": {},
    "outputs": [
     {
@@ -1398,7 +1408,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "5ec5a89a",
+   "id": "95d274e1",
    "metadata": {},
    "source": [
     "4. A su vez, podemos obtener este promedio por cada una de las entidades:"
@@ -1407,7 +1417,7 @@
   {
    "cell_type": "code",
    "execution_count": 29,
-   "id": "31d11d60",
+   "id": "f25bb7c9",
    "metadata": {},
    "outputs": [
     {
@@ -1461,7 +1471,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "28f74bd5",
+   "id": "05c1ef79",
    "metadata": {},
    "source": [
     "5. Dado los periodos de tiempo que abarca este data set, podemos calcular la tasa de desapariciones por diferentes periodos de tiempo. Primero lo abordaremos por años:"
@@ -1470,7 +1480,7 @@
   {
    "cell_type": "code",
    "execution_count": 30,
-   "id": "2d6d4a30",
+   "id": "d5c4646f",
    "metadata": {},
    "outputs": [
     {
@@ -1508,7 +1518,7 @@
   {
    "cell_type": "code",
    "execution_count": 31,
-   "id": "813f783b",
+   "id": "838be03b",
    "metadata": {},
    "outputs": [
     {
@@ -1536,7 +1546,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "0612e61a",
+   "id": "fcf969d2",
    "metadata": {},
    "source": [
     "Notemos que el número de desapariciones es bastante bajo antes de la decada de los 2010's pero tiene sus primeros picos altos durante esta decada e inicios de los 2020.\n",
@@ -1547,7 +1557,7 @@
   {
    "cell_type": "code",
    "execution_count": 32,
-   "id": "68e2974f",
+   "id": "2d0f48f4",
    "metadata": {},
    "outputs": [
     {
@@ -1584,7 +1594,7 @@
   {
    "cell_type": "code",
    "execution_count": 33,
-   "id": "8719d8ff",
+   "id": "25abefc9",
    "metadata": {},
    "outputs": [
     {
@@ -1612,7 +1622,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "ffd97431",
+   "id": "26c01d69",
    "metadata": {},
    "source": [
     "El mes donde más numero de gente se reporta como desaparecida es Enero y en el que menor número de casos hay Octubre.\n",
@@ -1623,7 +1633,7 @@
   {
    "cell_type": "code",
    "execution_count": 34,
-   "id": "c1617bef",
+   "id": "1000e2d8",
    "metadata": {},
    "outputs": [
     {
@@ -1659,7 +1669,7 @@
   {
    "cell_type": "code",
    "execution_count": 35,
-   "id": "ef289db7",
+   "id": "f12782c3",
    "metadata": {},
    "outputs": [
     {
@@ -1687,7 +1697,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "487a4a95",
+   "id": "451532d3",
    "metadata": {},
    "source": [
     "Aunque la tabla nos da la información compacta de todos los datos, al ordenar podemos obtener el año junto con el mes de los mayores reportes siendo este Enero del 2016."
@@ -1696,7 +1706,7 @@
   {
    "cell_type": "code",
    "execution_count": 36,
-   "id": "96e9e692",
+   "id": "733fb99b",
    "metadata": {},
    "outputs": [
     {
@@ -1727,7 +1737,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "7b26eaab",
+   "id": "b0303f8b",
    "metadata": {},
    "source": [
     "Y si obtenemos los últimos valores de este orden, veremos que los años con el menor número de reportes son alrededor de los años 60's y 70's."
@@ -1736,7 +1746,7 @@
   {
    "cell_type": "code",
    "execution_count": 37,
-   "id": "19d576e4",
+   "id": "7c1dd4c0",
    "metadata": {},
    "outputs": [
     {
