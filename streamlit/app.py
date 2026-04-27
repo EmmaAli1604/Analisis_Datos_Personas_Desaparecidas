@@ -27,52 +27,9 @@ def load_css():
 
 load_css()
 
-# ─── Estado global inicial ────────────────────────────────────────────────────
-def init_session_state():
-    defaults = {
-        "usuario": None,
-        "autenticado": False,
-        "tema": "light",
-    }
-    for key, value in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = value
-
-init_session_state()
-
-# ─── Sidebar ──────────────────────────────────────────────────────────────────
-def render_sidebar():
-    with st.sidebar:
-        st.image("assets/images/logo.png", use_container_width=True)
-        st.markdown("---")
-
-        st.markdown("### Navegación")
-        st.page_link("app.py",                    label="🏠 Inicio")
-        st.page_link("pages/01_dashboard.py",     label="📊 Dashboard")
-        st.page_link("pages/02_analisis.py",      label="🔍 Análisis")
-        st.page_link("pages/03_configuracion.py", label="⚙️ Configuración")
-
-        st.markdown("---")
-        if st.session_state.autenticado:
-            st.caption(f"👤 {st.session_state.usuario}")
-            if st.button("Cerrar sesión", use_container_width=True):
-                st.session_state.autenticado = False
-                st.session_state.usuario = None
-                st.rerun()
-
-render_sidebar()
-
 # ─── Página principal ─────────────────────────────────────────────────────────
 def main():
-    st.title("🏠 Bienvenido")
-    st.markdown("Selecciona una sección en el menú lateral para comenzar.")
-
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.info("📊 **Dashboard**\nVisualiza métricas clave.")
-    with col2:
-        st.info("🔍 **Análisis**\nExplora tus datos.")
-    with col3:
-        st.info("⚙️ **Configuración**\nAjusta parámetros.")
+    st.title("Panel de Control de Análisis de Datos de Personas Desaparecidas")
+    st.subheader("Database: Secretariado.csx")
 
 main()
