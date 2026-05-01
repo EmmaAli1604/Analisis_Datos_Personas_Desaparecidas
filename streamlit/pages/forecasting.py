@@ -1,4 +1,4 @@
-from data.config.config import DATA_INPUT
+from src.data.config.config import DATA_INPUT
 from src.models.forecasting import data_scale, balance_data, train_model, forecasting, reporte_resultados
 from sklearn.model_selection import train_test_split
 import streamlit as st
