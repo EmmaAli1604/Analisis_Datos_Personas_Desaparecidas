@@ -8,10 +8,10 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
 )
-
-from .normalization import  preprocess_features, normaliza_data
+from .normalization import normaliza_data, preprocess_features
 from ..data.config.config import DATA_INPUT
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import LabelEncoder
 
 
 def train_model(x_train: pd.DataFrame, y_train: pd.Series) -> RandomForestClassifier:
@@ -28,6 +28,70 @@ def train_model(x_train: pd.DataFrame, y_train: pd.Series) -> RandomForestClassi
     rf.fit(x_train, y_train)
     return rf
 
+def investigar_confidencial(df: pd.DataFrame, target_col: str = "ESTATUS_VICTIMA"):
+    """
+    Compara registros CONFIDENCIAL vs el resto para encontrar
+    qué los hace estructuralmente distintos.
+    """
+    df_conf  = df[df[target_col] == "CONFIDENCIAL"]
+    df_otros = df[df[target_col] != "CONFIDENCIAL"]
+
+    print("=" * 60)
+    print(f"REGISTROS CONFIDENCIAL : {len(df_conf):,}")
+    print(f"REGISTROS OTROS        : {len(df_otros):,}")
+    print("=" * 60)
+
+    alertas = []
+
+    for col in df.columns:
+        if col == target_col:
+            continue
+
+        # ── A. Proporción de NaN ──────────────────────────────────────────
+        nan_conf  = df_conf[col].isna().mean()
+        nan_otros = df_otros[col].isna().mean()
+        diff_nan  = abs(nan_conf - nan_otros)
+
+        # ── B. Proporción de valor "CONFIDENCIAL" como string ─────────────
+        if df[col].dtype == object:
+            str_conf  = df_conf[col].astype(str).str.upper().str.contains("CONFIDENCIAL").mean()
+            str_otros = df_otros[col].astype(str).str.upper().str.contains("CONFIDENCIAL").mean()
+            diff_str  = abs(str_conf - str_otros)
+        else:
+            diff_str  = 0
+
+        # ── C. Valores únicos exclusivos de CONFIDENCIAL ──────────────────
+        vals_conf  = set(df_conf[col].dropna().astype(str).unique())
+        vals_otros = set(df_otros[col].dropna().astype(str).unique())
+        exclusivos = vals_conf - vals_otros
+
+        # ── Reportar si hay diferencia significativa ──────────────────────
+        if diff_nan > 0.3 or diff_str > 0.3:
+            nivel = "🔴 ALTO" if (diff_nan > 0.7 or diff_str > 0.7) else "🟡 MEDIO"
+            alertas.append({
+                "columna"        : col,
+                "nivel"          : nivel,
+                "nan_confidencial": f"{nan_conf:.0%}",
+                "nan_otros"      : f"{nan_otros:.0%}",
+                "str_confidencial": f"{str_conf:.0%}" if df[col].dtype == object else "N/A",
+                "valores_exclusivos": list(exclusivos)[:5],
+            })
+
+    if alertas:
+        print("\n⚠️  COLUMNAS QUE DELATAN LA CLASE CONFIDENCIAL:\n")
+        for a in sorted(alertas, key=lambda x: x["nivel"], reverse=True):
+            print(f"  {a['nivel']}  →  {a['columna']}")
+            print(f"           NaN: CONFIDENCIAL={a['nan_confidencial']} | otros={a['nan_otros']}")
+            print(f"           Contiene 'CONFIDENCIAL': {a['str_confidencial']}")
+            if a["valores_exclusivos"]:
+                print(f"           Valores exclusivos: {a['valores_exclusivos']}")
+            print()
+    else:
+        print("\n✅ No se encontraron columnas que delaten la clase CONFIDENCIAL")
+
+    # ── Muestra de registros CONFIDENCIAL ─────────────────────────────────────
+    print("\n📋 MUESTRA DE 5 REGISTROS CONFIDENCIAL:")
+    print(df_conf.head(5).to_string())
 
 def forecasting(
     model: RandomForestClassifier,
@@ -46,12 +110,12 @@ def forecasting(
     return model.predict(X_test)
 
 
-def reporte_resultados(y_true: pd.Series, y_pred: np.ndarray) -> None:
+def reporte_resultados(y_test: pd.Series, y_pred: np.ndarray) -> None:
     """Imprime métricas de evaluación del modelo."""
-    acc       = accuracy_score(y_true, y_pred)
-    cm        = confusion_matrix(y_true, y_pred)
-    precision = precision_score(y_true, y_pred, average="weighted", zero_division=0)
-    recall    = recall_score(y_true, y_pred, average="weighted", zero_division=0)
+    acc       = accuracy_score(y_test, y_pred)
+    cm        = confusion_matrix(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, average="weighted", zero_division=0)
+    recall    = recall_score(y_test, y_pred, average="weighted", zero_division=0)
 
     print(f"Accuracy : {acc:.4f}")
     print(f"Precision: {precision:.4f}")
@@ -60,7 +124,7 @@ def reporte_resultados(y_true: pd.Series, y_pred: np.ndarray) -> None:
 
 def detectar_leakage(X: pd.DataFrame, y: pd.Series, threshold=0.95):
     """Detecta columnas con correlación sospechosamente alta con el target."""
-    from sklearn.preprocessing import LabelEncoder
+    
     
     y_enc = LabelEncoder().fit_transform(y)
     problemas = []
@@ -129,44 +193,41 @@ def diagnostico(X_train, X_test, y_train, y_test, model):
     print(f"\nClases en train: {dict(y_train.value_counts())}")
     print(f"Clases en test : {dict(y_test.value_counts())}")
 
-def auditoria_columnas(X: pd.DataFrame, y: pd.Series):
-    """Encuentra columnas que predigan el target perfectamente."""
-    from sklearn.preprocessing import LabelEncoder
-    
+def auditoria_columnas(X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
     y_enc = LabelEncoder().fit_transform(y)
-    print("=== AUDITORÍA DE COLUMNAS ===")
-    print(f"Shape del DataFrame: {X.shape}")
-    print(f"\nColumnas y tipos:\n{X.dtypes.to_string()}")
-    
-    print("\n--- Correlación con target ---")
+    registros = []
+
     for col in X.columns:
         try:
             col_enc = LabelEncoder().fit_transform(X[col].fillna("NA").astype(str))
-            corr = abs(np.corrcoef(col_enc, y_enc)[0, 1])
-            flag = " ⚠️  LEAKAGE" if corr > 0.7 else ""
-            print(f"  {col:45s} corr={corr:.3f}{flag}")
-        except Exception as e:
-            print(f"  {col:45s} ERROR: {e}")
+            corr    = abs(np.corrcoef(col_enc, y_enc)[0, 1])
+            registros.append({"Variable": col, "Correlación": round(float(corr), 3)})
+            print(f"Columna: {col:30s} | Correlación con target: {corr:.4f}")
+        except Exception:
+            registros.append({"Variable": col, "Correlación": 0.0})
 
-def main() -> None:
+    return pd.DataFrame(registros) 
+
+def main_forecasting() -> None:
     data_raw   = pd.read_csv(DATA_INPUT)
     target_col = "ESTATUS_VICTIMA"
 
     # 1. Normalizar (fechas, mayúsculas, mapeos) — antes de cualquier split
     data_norm = normaliza_data(data_raw)
+    investigar_confidencial(data_norm, target_col="ESTATUS_VICTIMA")
 
     # 2. Separar X e y — excluir columnas con leakage conocido
     cols_excluir = [
         target_col,
         "ESTATUS_MAP",
-        "SEXO",
+        "SEXO_MAP",
         "FECHA_NACIMIENTO_CONFIDENCIAL",
         "FECHA_DESAPARICION_CONFIDENCIAL",
         "FECHA_REGISTRO_CONFIDENCIAL",
-        "FECHA_NACIMIENTO",
-        "FECHA_DESAPARICION",
-        "FECHA_REGISTRO",
     ]
+    data_norm = data_norm[data_norm["ESTATUS_VICTIMA"] != "CONFIDENCIAL"].copy()
+    print(f"Registros tras eliminar CONFIDENCIAL: {len(data_norm)}")
+
     X = data_norm.drop(columns=cols_excluir, errors="ignore")
     y = data_norm[target_col]
 
@@ -196,7 +257,9 @@ def main() -> None:
     diagnostico(X_train_scaled, X_test_scaled, y_train_bal, y_test, model)
     y_predictions = forecasting(model, X_test_scaled)
     reporte_resultados(y_test, y_predictions)
+    
+    return y_test, y_predictions, model, X_test_scaled
 
 
 if __name__ == "__main__":
-    main()
+    main_forecasting()
