@@ -1,21 +1,29 @@
 import streamlit as st
 import pandas as pd
-import requests
+import json
 import plotly.express as px
+
+# ── Carga de GeoJSON (Modificado para usar archivos locales) ───────────────
 
 @st.cache_data
 def cargar_geojson_estados():
-    url = "https://raw.githubusercontent.com/PhantomInsights/mexican-geojson/main/states.geojson"
-    r = requests.get(url, timeout=30)
-    r.raise_for_status()
-    return r.json()
+    try:
+        # Asegúrate de tener este archivo en la misma carpeta que tu script
+        with open("estados.geojson", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        st.error("⚠️ No se encontró 'estados.geojson'. Asegúrate de descargarlo y guardarlo en la carpeta de tu proyecto.")
+        return None
 
 @st.cache_data
 def cargar_geojson_municipios():
-    url = "https://raw.githubusercontent.com/PhantomInsights/mexican-geojson/main/municipalities.geojson"
-    r = requests.get(url, timeout=30)
-    r.raise_for_status()
-    return r.json()
+    try:
+        # Asegúrate de tener este archivo en la misma carpeta que tu script
+        with open("municipios.geojson", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        st.error("⚠️ No se encontró 'municipios.geojson'. Asegúrate de descargarlo y guardarlo en la carpeta de tu proyecto.")
+        return None
 
 def _centro_estado(df):
     if "LAT" in df.columns and "LON" in df.columns:
@@ -33,8 +41,7 @@ def mapa_desaparecidos(data_raw: pd.DataFrame):
              data_raw["ESTATUS_VICTIMA"].unique().tolist())
 
     # ── Filtra solo personas desaparecidas ────────────────────────────────────
-    # Ajusta los valores según lo que veas en el debug de arriba
-    ESTATUS_DESAPARECIDO = ["DESAPARECIDO", "DESAPARECIDA"]   # ← ajusta si difiere
+    ESTATUS_DESAPARECIDO = ["DESAPARECIDO", "DESAPARECIDA"]   
 
     df_desap = data_raw[
         data_raw["ESTATUS_VICTIMA"].str.upper().str.strip().isin(ESTATUS_DESAPARECIDO)
@@ -68,7 +75,6 @@ def mapa_desaparecidos(data_raw: pd.DataFrame):
     # ── Contar desaparecidos por zona geográfica ──────────────────────────────
     if estado_sel == "Todos":
         # Nivel PAÍS → agrupa por estado
-        # Ajusta "CVE_ENT" al nombre exacto de tu columna de clave de estado
         df_mapa = (
             df_filtrado
             .groupby(["ENTIDAD", "CVE_ENT"], as_index=False)
@@ -76,7 +82,7 @@ def mapa_desaparecidos(data_raw: pd.DataFrame):
             .rename(columns={"size": "TOTAL_DESAPARECIDOS"})
         )
         col_location = "CVE_ENT"
-        feature_key  = "properties.CVEGEO"
+        feature_key  = "properties.CVEGEO" # Verifica que tu archivo local tenga esta clave
         zoom_inicial = 4.5
         centro       = {"lat": 23.6345, "lon": -102.5528}
         geojson_data = cargar_geojson_estados()
@@ -84,7 +90,6 @@ def mapa_desaparecidos(data_raw: pd.DataFrame):
 
     else:
         # Nivel ESTADO → agrupa por municipio
-        # Ajusta "CVE_MUN" al nombre exacto de tu columna de clave de municipio
         df_mapa = (
             df_filtrado
             .groupby(["MUNICIPIO", "CVE_MUN"], as_index=False)
@@ -92,7 +97,7 @@ def mapa_desaparecidos(data_raw: pd.DataFrame):
             .rename(columns={"size": "TOTAL_DESAPARECIDOS"})
         )
         col_location = "CVE_MUN"
-        feature_key  = "properties.CVEGEO"
+        feature_key  = "properties.CVEGEO" # Verifica que tu archivo local tenga esta clave
         zoom_inicial = 7
         centro       = _centro_estado(df_filtrado)
         geojson_data = cargar_geojson_municipios()
@@ -106,6 +111,11 @@ def mapa_desaparecidos(data_raw: pd.DataFrame):
     c3.metric("Máximo por zona",       f"{df_mapa['TOTAL_DESAPARECIDOS'].max():,}")
 
     # ── Mapa ──────────────────────────────────────────────────────────────────
+    if geojson_data is None:
+        st.warning("No se puede renderizar el mapa porque falta el archivo GeoJSON.")
+        st.dataframe(df_mapa)
+        return
+
     try:
         fig = px.choropleth_mapbox(
             df_mapa,
