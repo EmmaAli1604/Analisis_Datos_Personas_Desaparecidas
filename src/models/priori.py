@@ -10,7 +10,7 @@ def main():
     data = pd.read_csv(DATA_INPUT)
     
     # 1. Normalizar (fechas, mayúsculas, mapeos) — antes de cualquier acción
-    data_norm = normaliza_data(data)
+    data = normaliza_data(data)
     
     # 2. Nos quedamos con las columnas del dataset que sean útiles para Apriori
     # y modificamos aquellos datos que no sean categóricos y que aportan información.}
@@ -62,13 +62,13 @@ def main():
 
     for _, row in dfFinal.iterrows():
         trans = [
-            f"{row['EDAD']}",
-            f"{row['SEXO']}",
-            f"{row['AÑO_DESAPARICION']}",
-            f"{row['MES_DESAPARICION']}",
-            f"{row['TIEMPO_REPORTE']}",
-            f"{row['ESTATUS_VICTIMA']}",
-            f"{row['ENTIDAD']}"
+            f"EDAD_{row['EDAD']}",
+            f"SEXO_{row['SEXO']}",
+            f"AÑO_{row['AÑO_DESAPARICION']}",
+            f"MES_{row['MES_DESAPARICION']}",
+            f"TIEMPO_{row['TIEMPO_REPORTE']}",
+            f"ESTATUS_{row['ESTATUS_VICTIMA']}",
+            f"ENTIDAD_{row['ENTIDAD']}"
         ]
         transacciones.append(trans)
     
