@@ -19,18 +19,13 @@ def main():
     data["EDAD"] = pd.to_datetime(data["FECHA_DESAPARICION"], errors='coerce') - pd.to_datetime(data["FECHA_NACIMIENTO"], errors='coerce')
     data["EDAD"] = data["EDAD"].dt.days // 365
 
-    for i in data["EDAD"].index:
-        if data["EDAD"][i] < 12:
-            data["EDAD"][i] = "Niño"
-        elif data["EDAD"][i] < 18:
-            data["EDAD"][i] = "Adolescente"
-        elif data["EDAD"][i] < 30:
-            data["EDAD"][i] = "Joven"
-        elif data["EDAD"][i] < 60:
-            data["EDAD"][i] = "Adulto"
-        else:
-            data["EDAD"][i] = "Adulto Mayor"
-            
+    # Asignamos categorías con pd.cut para evitar warnings de asignación encadenada
+    data["EDAD"] = pd.cut(
+        data["EDAD"],
+        bins=[-1, 11, 17, 29, 59, 200],
+        labels=["Niño", "Adolescente", "Joven", "Adulto", "Adulto Mayor"],
+        include_lowest=True
+    )
     # Separamos el año, mes y dia de la desaparición
     data["AÑO_DESAPARICION"] = pd.to_datetime(data["FECHA_DESAPARICION"], errors='coerce').dt.year
     data["MES_DESAPARICION"] = pd.to_datetime(data["FECHA_DESAPARICION"], errors='coerce').dt.month
@@ -39,16 +34,13 @@ def main():
     data["TIEMPO_REPORTE"] = pd.to_datetime(data["FECHA_REGISTRO"], errors='coerce') - pd.to_datetime(data["FECHA_DESAPARICION"], errors='coerce')
     data["TIEMPO_REPORTE"] = data["TIEMPO_REPORTE"].dt.days
 
-    # Creamos Rangos para el Tiempo que tardo en colocarse el Reporte
-    for i in data["TIEMPO_REPORTE"].index:
-        if data["TIEMPO_REPORTE"][i] <= 1:
-            data["TIEMPO_REPORTE"][i] = "Inmediato"
-        elif data["TIEMPO_REPORTE"][i] <= 7:
-            data["TIEMPO_REPORTE"][i] = "Rapido"
-        elif data["TIEMPO_REPORTE"][i] <= 30:
-            data["TIEMPO_REPORTE"][i] = "Tardio"
-        else:
-            data["TIEMPO_REPORTE"][i] = "Muy Tardio"
+    # Asignamos categorías con pd.cut para evitar warnings de asignación encadenada
+    data["TIEMPO_REPORTE"] = pd.cut(
+        data["TIEMPO_REPORTE"],
+        bins=[-np.inf, 1, 7, 30, np.inf],
+        labels=["Inmediato", "Rapido", "Tardio", "Muy Tardio"],
+        include_lowest=True
+    )
 
     # Nos quedamos con las columnas que nos interesan para el análisis de Apriori
     # Se considero la Columna Municipio en un inicio pero, además de ser un dato
