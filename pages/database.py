@@ -26,8 +26,8 @@ def main():
     # ─── Menú de selección ────────────────────────────────────────────────────
     OPCIONES = {
         "🟠 Raw — Datos originales":       "raw",
-        "🟡 Imputados — Nulos tratados":   "imputed",
-        "🟢 Procesados — Listos para uso": "processed",
+        "🟢 Imputados — Nulos tratados":   "imputed",
+        "🟡 Procesados — Listos para uso": "processed",
     }
 
     seleccion = st.radio(

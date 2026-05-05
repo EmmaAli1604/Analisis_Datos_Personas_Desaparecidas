@@ -52,23 +52,7 @@ load_css()
 def main():
     st.title("Panel de Control de Análisis de Datos de Personas Desaparecidas")
     st.subheader("Database: Secretariado.csx")
-    y_test, y_predictions, model, X_test, data_raw = main_forecasting()
-    panel_metricas(y_test, y_predictions)
-    col1, col2 = st.columns(2)
-    if isinstance(X_test, np.ndarray):
-        X_test = pd.DataFrame(X_test)
-    with col1:
-        conteos = data_raw["ESTATUS_VICTIMA"].str.upper().str.strip().value_counts()
-
-        fig = go.Figure(data=go.Pie(
-            labels=conteos.index.tolist(),
-            values=conteos.values.tolist(),
-            hole=0.4,
-            marker=dict(colors=["#d62728", "#1f77b4", "#ff7f0e"]),
-        ))
-        fig.update_layout(title="Distribución de Estatus de Víctimas")
-        st.plotly_chart(fig, use_container_width=True)
-    with col2:
-        matriz_confusion_con_etiquetas(y_test, y_predictions)
+    st.markdown(
+        "Ya no se pudo hacer el dashboard, ya fue todo, ya que termine el semestre. ")
 
 main()

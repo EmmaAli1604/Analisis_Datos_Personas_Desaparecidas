@@ -219,15 +219,12 @@ def auditoria_columnas(X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
     return pd.DataFrame(registros) 
 
 def main_forecasting():
-    # 1. Carga y Limpieza inicial
     data_raw = pd.read_csv(DATA_INPUT)
     target_col = "ESTATUS_VICTIMA"
     data_norm = normaliza_data(data_raw)
 
-    # Diagnóstico inicial de datos confidenciales
     investigar_confidencial(data_norm, target_col=target_col)
 
-    # Filtrado de registros que sesgan el modelo
     data_norm = data_norm[data_norm[target_col] != "CONFIDENCIAL"].copy()
     
     cols_excluir = [
@@ -239,38 +236,28 @@ def main_forecasting():
     X = data_norm.drop(columns=cols_excluir, errors="ignore")
     y = data_norm[target_col]
 
-    # 2. AUDITORÍA PRE-ENTRENAMIENTO: Ver correlaciones reales
     print("\n--- AUDITORÍA DE COLUMNAS (Pre-procesamiento) ---")
     auditoria_columnas(X, y)
     
-    # Detección de Data Leakage (Variables que predicen el target por error)
     detectar_leakage(X, y)
 
-    # 3. SPLIT (Importante: Stratify para mantener proporción de clases)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    # 4. PREPROCESAMIENTO CONSISTENTE
     X_train = preprocess_features(X_train)
     X_test = preprocess_features(X_test)
     
-    # Asegurar que ambos DataFrames tengan las mismas columnas (dummies/encoding)
     X_train, X_test = X_train.align(X_test, join='left', axis=1, fill_value=0)
 
-    # 5. IMPUTACIÓN
     imputer = SimpleImputer(strategy="median")
     X_train = pd.DataFrame(imputer.fit_transform(X_train), columns=X_train.columns)
     X_test = pd.DataFrame(imputer.transform(X_test), columns=X_test.columns)
 
-    # 6. ESCALAMIENTO CORRECTO (Evita Data Leakage)
-    # Se ajusta en Train y se aplica la MISMA transformación a Test
     scaler = StandardScaler()
     X_train_scaled = pd.DataFrame(scaler.fit_transform(X_train), columns=X_train.columns)
     X_test_scaled = pd.DataFrame(scaler.transform(X_test), columns=X_test.columns)
 
-    # 8. ENTRENAMIENTO
-    # Nota: Se redujo max_depth para forzar al modelo a generalizar mejor
     model = RandomForestClassifier(
         n_estimators=200,
         max_depth=10, 
@@ -281,7 +268,6 @@ def main_forecasting():
     )
     model.fit(X_train_scaled, y_train)
 
-    # 9. DIAGNÓSTICO FINAL Y MÉTRICAS
     print("\n" + "="*40)
     diagnostico(X_train_scaled, X_test_scaled, y_train, y_test, model)
     
@@ -289,7 +275,6 @@ def main_forecasting():
     print("\n--- REPORTE DE RESULTADOS FINAL ---")
     y_predictions = model.predict(X_test_scaled)
     
-    # Obtener probabilidades (necesario para ROC-AUC)
     y_probs = model.predict_proba(X_test_scaled)
     reporte_resultados(y_test, y_predictions, y_probs)
 
