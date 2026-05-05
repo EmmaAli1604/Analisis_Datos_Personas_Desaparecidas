@@ -11,17 +11,9 @@ parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
 
 # 3. Agregar el directorio padre al "Path" temporal de Python
 sys.path.append(parent_dir)
-from components.mapa import mapa_desaparecidos
 import streamlit as st
 import os
-import plotly.graph_objects as go
 from config.settings import settings
-from pages.forecasting import panel_metricas, matriz_confusion_sin_confidencialidad
-from src.models.forecasting import main_forecasting
-from components.matriz_confunsion import matriz_confusion_con_etiquetas
-import plotly.express as px
-import pandas as pd
-import numpy as np
 
 
 # ─── Configuración de la página ───────────────────────────────────────────────
